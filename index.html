@@ -6,11 +6,11 @@
     <title>Calculadora de Prazos Judiciais</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        .container { max-width: 400px; margin: auto; }
+        .container { width: 50%; float: left; padding: 20px; box-sizing: border-box; }
+        .manual { width: 50%; float: left; padding: 20px; box-sizing: border-box; text-align: left; }
         input, select, button { width: 100%; margin: 10px 0; padding: 10px; }
         .resultado { margin-top: 20px; font-weight: bold; }
-        .divider { border-top: 2px solid #000; margin: 20px 0; }
-        .manual { text-align: left; max-width: 400px; margin: auto; }
+        .divider { border-left: 2px solid #000; height: 100vh; position: absolute; left: 50%; top: 0; }
     </style>
 </head>
 <body>
@@ -66,7 +66,7 @@
             const labelData = document.getElementById('labelData');
             
             if (meio === 'dje') {
-                labelData.innerText = 'Data de disponibilização:';
+                labelData.innerText = 'Data de envio ao DJE:';
             } else if (meio === 'sistema') {
                 labelData.innerText = 'Data de intimação:';
             } else if (meio === 'sistema_autarquia') {
@@ -82,7 +82,7 @@
             if (meio === 'sistema_autarquia') {
                 prazo *= 2;
             } else if (meio === 'dje') {
-                prazo += 1;
+                prazo += 2;
             }
             
             let diasDecorridos = 0;
@@ -125,4 +125,5 @@
     </script>
 </body>
 </html>
+
 
