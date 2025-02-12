@@ -82,7 +82,7 @@
             if (meio === 'sistema_autarquia') {
                 prazo *= 2;
             } else if (meio === 'dje') {
-                prazo += 3;
+                prazo += 2;
             }
             
             let diasDecorridos = 0;
@@ -111,10 +111,10 @@
             }
             
             if (meio === 'dje') {
-                diasDecorridos = Math.max(0, diasDecorridos - 2);
+                diasDecorridos = Math.max(0, diasDecorridos - 1);
             }
             
-            document.getElementById('resultado').innerHTML = `Data final do prazo: ${dataFinal.toLocaleDateString('pt-BR')}<br>Dias decorridos: ${diasDecorridos}`;
+            document.getElementById('resultado').innerHTML = Data final do prazo: ${dataFinal.toLocaleDateString('pt-BR')}<br>Dias decorridos: ${diasDecorridos};
         }
         
         function ehDiaUtil(data) {
@@ -125,5 +125,4 @@
     </script>
 </body>
 </html>
-
 
