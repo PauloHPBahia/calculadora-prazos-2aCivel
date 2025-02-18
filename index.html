@@ -89,11 +89,12 @@
             
             dataFinal.setDate(dataFinal.getDate() + 1);
             while (prazo > 0) {
-                if (ehDiaUtil(dataFinal)) {
-                    prazo--;
-                }
-                dataFinal.setDate(dataFinal.getDate() + 1);
-            }
+    if (ehDiaUtil(dataFinal)) {
+        prazo--;
+        if (prazo === 0) break; // Para a contagem exatamente no último dia útil
+    }
+    dataFinal.setDate(dataFinal.getDate() + 1);
+}
             
             while (!ehDiaUtil(dataFinal)) {
                 dataFinal.setDate(dataFinal.getDate() + 1);
