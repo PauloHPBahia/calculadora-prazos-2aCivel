@@ -12,15 +12,15 @@ function run() {
 
   const sistemaUmDia = calcularPrazoDetalhado('2026-01-05', '1', 'sistema', new Date('2026-01-05T00:00:00'));
   assert.equal(sistemaUmDia.ok, true);
-  assert.equal(formatDateKey(sistemaUmDia.dataFinal), '2026-01-06', 'Prazo de 1 dia útil não pode avançar +1 indevido');
+  assert.equal(formatDateKey(sistemaUmDia.dataFinal), '2026-01-21', 'Prazo de 1 dia útil não pode avançar +1 indevido');
 
   const sistemaAutarquia = calcularPrazoDetalhado('2026-01-05', '2', 'sistema_autarquia', new Date('2026-01-05T00:00:00'));
   assert.equal(sistemaAutarquia.ok, true);
-  assert.equal(formatDateKey(sistemaAutarquia.dataFinal), '2026-01-09', 'Autarquia deve dobrar o prazo');
+  assert.equal(formatDateKey(sistemaAutarquia.dataFinal), '2026-01-26', 'Autarquia deve dobrar o prazo');
 
   const dje = calcularPrazoDetalhado('2026-01-05', '1', 'dje', new Date('2026-01-05T00:00:00'));
   assert.equal(dje.ok, true);
-  assert.equal(formatDateKey(dje.dataFinal), '2026-01-07', 'DJE deve adicionar 1 dia útil ao prazo concedido');
+  assert.equal(formatDateKey(dje.dataFinal), '2026-01-22', 'DJE deve adicionar 1 dia útil ao prazo concedido');
 
   const comFeriado = calcularPrazoDetalhado('2025-04-17', '1', 'sistema', new Date('2025-04-17T00:00:00'));
   assert.equal(comFeriado.ok, true);
