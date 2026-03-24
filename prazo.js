@@ -23,7 +23,22 @@
 
   function parseDateFromInput(value) {
     if (!value) return null;
-    const parsed = new Date(`${value}T00:00:00`);
+    const somenteData = String(value).trim().slice(0, 10);
+    const partes = somenteData.split('-').map((item) => Number.parseInt(item, 10));
+    if (partes.length !== 3 || partes.some((item) => !Number.isInteger(item))) {
+      return null;
+    }
+
+    const [ano, mes, dia] = partes;
+    const parsed = new Date(ano, mes - 1, dia);
+    if (
+      parsed.getFullYear() !== ano
+      || parsed.getMonth() !== mes - 1
+      || parsed.getDate() !== dia
+    ) {
+      return null;
+    }
+
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
@@ -127,8 +142,8 @@
       }
 
       const estimativa = estimarDisponibilizacaoPorEnvio(dataEnvio);
-      const publicacao = calcularPublicacaoDJEN(estimativa.dataDisponibilizacao);
-      const inicioPrazo = calcularInicioPrazo(publicacao);
+      const publicacao = estimativa.dataDisponibilizacao;
+      const inicioPrazo = calcularInicioPrazo(estimativa.dataDisponibilizacao);
       const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
 
       return {
