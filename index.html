@@ -5,92 +5,307 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Prazos Judiciais</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        .container { max-width: 400px; margin: auto; }
-        input, select, button { width: 100%; margin: 10px 0; padding: 10px; }
-        .resultado { margin-top: 20px; font-weight: bold; }
-        .erro { color: #b00020; }
-        .divider { border-top: 2px solid #000; margin: 20px 0; }
-        .manual { text-align: left; max-width: 400px; margin: auto; }
+        :root {
+            --bg: #f3f5f9;
+            --card: #ffffff;
+            --text: #172033;
+            --muted: #5e6a82;
+            --primary: #184f8a;
+            --primary-soft: #eaf2fb;
+            --warning-bg: #fff6e8;
+            --warning-border: #f4b44c;
+            --error-bg: #fdecef;
+            --error-border: #d6425d;
+            --estimated-bg: #fff6e8;
+            --confirmed-bg: #e8f6ed;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px 12px;
+        }
+
+        .container, .manual {
+            max-width: 760px;
+            margin: 0 auto;
+            background: var(--card);
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(23, 32, 51, 0.08);
+            padding: 22px;
+        }
+
+        h1 { font-size: 1.35rem; margin-top: 0; margin-bottom: 16px; }
+        h2 { font-size: 1.1rem; margin-top: 0; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        label { display: block; font-weight: 700; margin-bottom: 6px; }
+
+        input, select, button {
+            width: 100%;
+            border: 1px solid #d3dbea;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.98rem;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid #c5dbf4;
+            border-color: var(--primary);
+        }
+
+        .help {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.3;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            font-weight: 700;
+            background: var(--primary);
+            color: white;
+            margin-top: 8px;
+        }
+
+        .banner {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-left: 4px solid var(--warning-border);
+            background: var(--warning-bg);
+            border-radius: 8px;
+            font-size: 0.92rem;
+            display: none;
+        }
+
+        .erro {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-left: 4px solid var(--error-border);
+            background: var(--error-bg);
+            border-radius: 8px;
+            color: #8d1b35;
+            font-weight: 600;
+        }
+
+        .resultado {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #d9e0ee;
+            display: none;
+            text-align: left;
+        }
+
+        .resultado.confirmado { background: var(--confirmed-bg); }
+        .resultado.estimado { background: var(--estimated-bg); }
+
+        .status {
+            display: inline-block;
+            font-size: 0.84rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+
+        .resultado dl {
+            margin: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 12px;
+            font-size: 0.95rem;
+        }
+
+        .resultado dt { font-weight: 700; }
+        .resultado dd { margin: 0; text-align: right; }
+
+        .manual {
+            margin-top: 14px;
+            line-height: 1.42;
+        }
+
+        .manual ul { padding-left: 20px; }
+
+        @media (max-width: 520px) {
+            .resultado dl { grid-template-columns: 1fr; }
+            .resultado dd { text-align: left; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Calculadora de Prazos Judiciais da 2ª Vara Cível de Icoaraci</h2>
+        <h1>Calculadora de Prazos Judiciais da 2ª Vara Cível e Empresarial de Icoaraci</h1>
 
-        <label>Meio de intimação:</label>
-        <select id="meioIntimacao" onchange="atualizarLabelData(); document.getElementById('dataIntimacao').focus();">
-            <option value="sistema">SISTEMA</option>
-            <option value="dje">DJE</option>
-            <option value="sistema_autarquia">SISTEMA (MP, DP, AUTARQUIA)</option>
-        </select>
+        <div class="grid">
+            <div>
+                <label for="meioIntimacao">Modalidade</label>
+                <select id="meioIntimacao" onchange="atualizarCamposDinamicos()">
+                    <option value="djen_confirmado">DJEN — disponibilização confirmada</option>
+                    <option value="djen_estimativa">DJEN — envio para estimativa</option>
+                    <option value="sistema">Sistema/portal eletrônico</option>
+                    <option value="sistema_autarquia">Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia</option>
+                </select>
+                <p class="help" id="descricaoModalidade"></p>
+            </div>
 
-        <label id="labelData">Data de intimação:</label>
-        <input type="date" id="dataIntimacao" onkeydown="if(event.key === 'Enter') document.getElementById('prazoConcedido').focus();">
+            <div>
+                <label id="labelData" for="dataReferencia">Data de disponibilização</label>
+                <input type="date" id="dataReferencia" onkeydown="if(event.key === 'Enter') document.getElementById('prazoConcedido').focus();">
+                <p class="help" id="ajudaData"></p>
+            </div>
 
-        <label>Prazo concedido (em dias úteis):</label>
-        <input type="number" id="prazoConcedido" onkeydown="if(event.key === 'Enter') calcularPrazo();">
+            <div>
+                <label for="prazoConcedido">Prazo concedido (dias úteis)</label>
+                <input type="number" id="prazoConcedido" min="1" onkeydown="if(event.key === 'Enter') calcularPrazo();">
+                <p class="help">A contagem considera os feriados cadastrados no sistema.</p>
+            </div>
+        </div>
 
-        <button onclick="calcularPrazo()">Calcular</button>
+        <button onclick="calcularPrazo()">Calcular prazo</button>
 
-        <div class="resultado" id="resultado"></div>
+        <div class="banner" id="bannerAviso"></div>
+        <div id="erro" class="erro" style="display:none"></div>
+
+        <section class="resultado" id="resultado"></section>
     </div>
 
-    <div class="divider"></div>
-
     <div class="manual">
-        <h3>Manual de Uso</h3>
-        <p><strong>1. Escolha o meio de intimação:</strong></p>
+        <h2>Manual de uso (resumo)</h2>
         <ul>
-            <li><strong>SISTEMA:</strong> Contagem normal de dias úteis.</li>
-            <li><strong>DJE:</strong> Adiciona um dia útil ao prazo concedido.</li>
-            <li><strong>SISTEMA (MP, DP, AUTARQUIA):</strong> O prazo é contado em dobro.</li>
+            <li><strong>DJEN — disponibilização confirmada:</strong> informe a data da disponibilização. O sistema calcula publicação (próximo dia útil), início do prazo (próximo dia útil após publicação) e vencimento.</li>
+            <li><strong>DJEN — envio para estimativa:</strong> informe data e hora do envio. Até 17h em dia útil, a disponibilização é estimada para o próximo dia útil. Após 17h ou em dia não útil, o sistema aplica estimativa conservadora e mostra alerta de conferência.</li>
+            <li><strong>Sistema/portal eletrônico:</strong> mantém lógica de ciência/intimação em portal, com contagem em dias úteis.</li>
+            <li><strong>Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia:</strong> mantém lógica separada com prazo contado em dobro.</li>
         </ul>
-
-        <p><strong>2. Insira a data da intimação:</strong></p>
-        <p>Informe a data da intimação conforme o meio escolhido.</p>
-
-        <p><strong>3. Digite o prazo concedido:</strong></p>
-        <p>Informe o número de dias úteis do prazo processual.</p>
-
-        <p><strong>4. Clique em "Calcular" ou pressione Enter:</strong></p>
-        <p>A calculadora exibirá a data final do prazo e os dias decorridos.</p>
-
-        <p><strong>Observação importante:</strong> a lista de feriados considerada nesta versão está cadastrada para os anos de 2024 e 2025. Para períodos fora desse intervalo, revise/atualize os feriados antes de usar o resultado para decisões processuais.</p>
+        <p><strong>Base legal orientativa:</strong> Lei 11.419/2006, art. 4º, §§ 3º e 4º; CPC, arts. 219 e 224, §§ 2º e 3º; regra operacional do TJPA (Resolução nº 14/2021) para previsão de disponibilização do DJEN.</p>
     </div>
 
     <script src="prazo.js"></script>
     <script>
-        function atualizarLabelData() {
-            const meio = document.getElementById('meioIntimacao').value;
-            const labelData = document.getElementById('labelData');
-
-            if (meio === 'dje') {
-                labelData.innerText = 'Data de disponibilização:';
-            } else if (meio === 'sistema') {
-                labelData.innerText = 'Data de intimação:';
-            } else if (meio === 'sistema_autarquia') {
-                labelData.innerText = 'Data de expedição eletrônica:';
+        const configuracaoModalidade = {
+            djen_confirmado: {
+                tipoInput: 'date',
+                label: 'Data de disponibilização',
+                ajuda: 'Data oficialmente exibida no DJEN/CNJ.',
+                descricao: 'Cálculo confirmado com marcos completos do DJEN.'
+            },
+            djen_estimativa: {
+                tipoInput: 'datetime-local',
+                label: 'Data e hora do envio',
+                ajuda: 'Use a data/hora em que a matéria foi enviada para publicação.',
+                descricao: 'Pré-cálculo para rotina da secretaria. Resultado com status Estimado.'
+            },
+            sistema: {
+                tipoInput: 'date',
+                label: 'Data de ciência/intimação no sistema',
+                ajuda: 'Modalidade distinta do DJEN. Mantém a lógica atual do portal.',
+                descricao: 'Intimação via portal eletrônico (sem regra de publicação do DJEN).'
+            },
+            sistema_autarquia: {
+                tipoInput: 'date',
+                label: 'Data de ciência/intimação no sistema',
+                ajuda: 'Mantém contagem separada com prazo em dobro.',
+                descricao: 'Portal eletrônico para MP/DP/Fazenda/Autarquia.'
             }
+        };
+
+        function atualizarCamposDinamicos() {
+            const meio = document.getElementById('meioIntimacao').value;
+            const cfg = configuracaoModalidade[meio];
+            const inputData = document.getElementById('dataReferencia');
+
+            inputData.type = cfg.tipoInput;
+            inputData.value = '';
+            document.getElementById('labelData').innerText = cfg.label;
+            document.getElementById('ajudaData').innerText = cfg.ajuda;
+            document.getElementById('descricaoModalidade').innerText = cfg.descricao;
+            ocultarMensagens();
+        }
+
+        function ocultarMensagens() {
+            document.getElementById('erro').style.display = 'none';
+            document.getElementById('bannerAviso').style.display = 'none';
+            const resultado = document.getElementById('resultado');
+            resultado.style.display = 'none';
+            resultado.innerHTML = '';
+            resultado.classList.remove('confirmado', 'estimado');
+        }
+
+        function exibirErro(mensagem) {
+            const erro = document.getElementById('erro');
+            erro.style.display = 'block';
+            erro.innerText = mensagem;
+        }
+
+        function exibirResultado(calculo) {
+            const resultado = document.getElementById('resultado');
+            const statusClasse = calculo.status === 'Estimado' ? 'estimado' : 'confirmado';
+            const entradas = Object.entries(calculo.marcoTemporal || {});
+
+            resultado.classList.add(statusClasse);
+            resultado.innerHTML = `
+                <span class="status">Status: ${calculo.status}</span>
+                <dl>
+                    ${entradas.map(([chave, valor]) => `<dt>${formatarLabel(chave)}</dt><dd>${valor}</dd>`).join('')}
+                    <dt>Dias úteis decorridos até hoje</dt>
+                    <dd>${calculo.diasDecorridos}</dd>
+                </dl>
+            `;
+            resultado.style.display = 'block';
+
+            if (calculo.aviso) {
+                const banner = document.getElementById('bannerAviso');
+                banner.innerText = calculo.aviso;
+                banner.style.display = 'block';
+            }
+        }
+
+        function formatarLabel(chave) {
+            const labels = {
+                envio: 'Envio',
+                disponibilizacao: 'Disponibilização',
+                publicacao: 'Publicação',
+                inicioPrazo: 'Início do prazo',
+                prazoConcedido: 'Prazo concedido',
+                prazoEfetivo: 'Prazo efetivo',
+                vencimento: 'Vencimento',
+                ciencia: 'Ciência/Intimação'
+            };
+            return labels[chave] || chave;
         }
 
         function calcularPrazo() {
-            const dataIntimacao = document.getElementById('dataIntimacao').value;
+            ocultarMensagens();
+
+            const dataReferencia = document.getElementById('dataReferencia').value;
             const prazoConcedido = document.getElementById('prazoConcedido').value;
             const meio = document.getElementById('meioIntimacao').value;
-            const resultado = document.getElementById('resultado');
 
-            const calculo = window.PrazoUtils.calcularPrazoDetalhado(dataIntimacao, prazoConcedido, meio);
+            const calculo = window.PrazoUtils.calcularPrazoDetalhado(dataReferencia, prazoConcedido, meio);
 
             if (!calculo.ok) {
-                resultado.classList.add('erro');
-                resultado.innerText = calculo.erro;
+                exibirErro(calculo.erro || 'Não foi possível calcular o prazo. Verifique os campos.');
                 return;
             }
 
-            resultado.classList.remove('erro');
-            resultado.innerHTML = `Data final do prazo: ${calculo.dataFinalFormatada}<br>Dias decorridos: ${calculo.diasDecorridos}`;
+            exibirResultado(calculo);
         }
+
+        atualizarCamposDinamicos();
     </script>
 </body>
 </html>
