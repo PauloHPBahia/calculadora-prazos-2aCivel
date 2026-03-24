@@ -187,7 +187,7 @@
         <h2>Manual de uso (resumo)</h2>
         <ul>
             <li><strong>DJEN — disponibilização confirmada:</strong> informe a data da disponibilização. O sistema calcula publicação (próximo dia útil), início do prazo (próximo dia útil após publicação) e vencimento.</li>
-            <li><strong>DJEN — envio para estimativa:</strong> informe data e hora do envio. Até 17h em dia útil, a disponibilização é estimada para o próximo dia útil. Após 17h ou em dia não útil, o sistema aplica estimativa conservadora e mostra alerta de conferência.</li>
+            <li><strong>DJEN — envio para estimativa:</strong> informe apenas a data do envio. O cálculo ignora horário e projeta disponibilização, publicação e início do prazo sempre no próximo dia útil subsequente.</li>
             <li><strong>Sistema/portal eletrônico:</strong> mantém lógica de ciência/intimação em portal, com contagem em dias úteis.</li>
             <li><strong>Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia:</strong> mantém lógica separada com prazo contado em dobro.</li>
         </ul>
@@ -204,9 +204,9 @@
                 descricao: 'Cálculo confirmado com marcos completos do DJEN.'
             },
             djen_estimativa: {
-                tipoInput: 'datetime-local',
-                label: 'Data e hora do envio',
-                ajuda: 'Use a data/hora em que a matéria foi enviada para publicação.',
+                tipoInput: 'date',
+                label: 'Data do envio',
+                ajuda: 'Use apenas a data em que a matéria foi enviada para publicação.',
                 descricao: 'Pré-cálculo para rotina da secretaria. Resultado com status Estimado.'
             },
             sistema: {

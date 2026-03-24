@@ -27,20 +27,15 @@ function run() {
   const vencimento = contarPrazoDiasUteis(new Date('2025-04-23T00:00:00'), 3);
   assert.equal(formatDateKey(vencimento), '2025-04-25', 'Contagem em dias úteis deve considerar o dia de início como primeiro dia');
 
-  const estimativaNoPrazo = estimarDisponibilizacaoPorEnvio(new Date('2025-04-16T16:00:00'));
-  assert.equal(formatDateKey(estimativaNoPrazo.dataDisponibilizacao), '2025-04-22');
-  assert.equal(estimativaNoPrazo.conservador, false);
-
-  const estimativaConservadora = estimarDisponibilizacaoPorEnvio(new Date('2025-04-16T18:00:00'));
-  assert.equal(formatDateKey(estimativaConservadora.dataDisponibilizacao), '2025-04-23');
-  assert.equal(estimativaConservadora.conservador, true);
+  const estimativaSemCorteHorario = estimarDisponibilizacaoPorEnvio(new Date('2025-04-16T18:00:00'));
+  assert.equal(formatDateKey(estimativaSemCorteHorario.dataDisponibilizacao), '2025-04-22');
 
   const djenConfirmado = calcularPrazoDetalhado('2025-04-16', '2', 'djen_confirmado', new Date('2025-04-23T00:00:00'));
   assert.equal(djenConfirmado.ok, true);
   assert.equal(djenConfirmado.status, 'Confirmado');
   assert.equal(formatDateKey(djenConfirmado.dataFinal), '2025-04-24');
 
-  const djenEstimado = calcularPrazoDetalhado('2025-04-16T18:00', '2', 'djen_estimativa', new Date('2025-04-24T00:00:00'));
+  const djenEstimado = calcularPrazoDetalhado('2025-04-16', '2', 'djen_estimativa', new Date('2025-04-24T00:00:00'));
   assert.equal(djenEstimado.ok, true);
   assert.equal(djenEstimado.status, 'Estimado');
   assert.equal(djenEstimado.aviso.length > 0, true);
