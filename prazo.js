@@ -21,19 +21,9 @@
     return data.toLocaleDateString('pt-BR');
   }
 
-  function formatDateTimePtBr(data) {
-    return data.toLocaleString('pt-BR', { hour12: false });
-  }
-
   function parseDateFromInput(value) {
     if (!value) return null;
     const parsed = new Date(`${value}T00:00:00`);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }
-
-  function parseDateTimeFromInput(value) {
-    if (!value) return null;
-    const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
@@ -80,21 +70,8 @@
   function estimarDisponibilizacaoPorEnvio(dataEnvio) {
     const diaEnvio = new Date(dataEnvio);
     diaEnvio.setHours(0, 0, 0, 0);
-
-    const envioEmDiaUtil = ehDiaUtil(diaEnvio);
-    const antesOuNoLimite = dataEnvio.getHours() < 17 || (dataEnvio.getHours() === 17 && dataEnvio.getMinutes() === 0 && dataEnvio.getSeconds() === 0);
-
-    if (envioEmDiaUtil && antesOuNoLimite) {
-      return {
-        dataDisponibilizacao: obterProximoDiaUtil(diaEnvio),
-        conservador: false
-      };
-    }
-
-    const primeiroCicloUtil = obterProximoDiaUtil(diaEnvio);
     return {
-      dataDisponibilizacao: obterProximoDiaUtil(primeiroCicloUtil),
-      conservador: true
+      dataDisponibilizacao: obterProximoDiaUtil(diaEnvio)
     };
   }
 
@@ -144,9 +121,9 @@
     const { prazoConcedido } = validacao;
 
     if (meio === 'djen_estimativa') {
-      const dataEnvio = parseDateTimeFromInput(dataValor);
+      const dataEnvio = parseDateFromInput(dataValor);
       if (!dataEnvio) {
-        return { ok: false, erro: 'Informe a data e hora de envio para estimativa.' };
+        return { ok: false, erro: 'Informe a data de envio para estimativa.' };
       }
 
       const estimativa = estimarDisponibilizacaoPorEnvio(dataEnvio);
@@ -158,12 +135,9 @@
         ok: true,
         meio,
         status: 'Estimado',
-        estimativaConservadora: estimativa.conservador,
-        aviso: estimativa.conservador
-          ? 'Este cálculo é uma estimativa prévia. Confira a data de disponibilização no DJEN/CNJ assim que a publicação constar no sistema.'
-          : '',
+        aviso: 'Este cálculo é uma estimativa prévia. Confira a data de disponibilização no DJEN/CNJ assim que a publicação constar no sistema.',
         marcoTemporal: {
-          envio: formatDateTimePtBr(dataEnvio),
+          envio: formatDatePtBr(dataEnvio),
           disponibilizacao: formatDatePtBr(estimativa.dataDisponibilizacao),
           publicacao: formatDatePtBr(publicacao),
           inicioPrazo: formatDatePtBr(inicioPrazo),
@@ -237,7 +211,6 @@
     estimarDisponibilizacaoPorEnvio,
     calcularPrazoDetalhado,
     parseDateFromInput,
-    parseDateTimeFromInput,
     formatDateKey
   };
 
