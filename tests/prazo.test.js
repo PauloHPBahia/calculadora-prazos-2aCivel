@@ -3,7 +3,12 @@ const {
   isDiaUtil,
   proximoDiaUtil,
   somarDiasUteis,
+  calcularPublicacaoDJEN,
+  calcularInicioPrazo,
+  contarPrazoDiasUteis,
+  estimarDisponibilizacaoPorEnvio,
   calcularDJEN,
+  calcularDJENEstimado,
   calcularDomicilioIntimacao,
   calcularDomicilioCitacao,
   aplicarPrazoEmDobroSeCabivel,
@@ -23,10 +28,26 @@ function run() {
   const venc = somarDiasUteis(new Date('2025-04-23T00:00:00'), 3);
   assert.equal(formatDateKey(venc), '2025-04-25');
 
+  assert.equal(formatDateKey(calcularPublicacaoDJEN(new Date('2025-04-16T00:00:00'))), '2025-04-22');
+  assert.equal(formatDateKey(calcularInicioPrazo(new Date('2025-04-22T00:00:00'))), '2025-04-23');
+  assert.equal(formatDateKey(contarPrazoDiasUteis(new Date('2025-04-23T00:00:00'), 2)), '2025-04-24');
+
   const djen = calcularDJEN({ dataBase: new Date('2025-04-16T00:00:00'), prazoDias: 2 });
   assert.equal(formatDateKey(djen.publicacao), '2025-04-22');
   assert.equal(formatDateKey(djen.inicioPrazo), '2025-04-23');
   assert.equal(formatDateKey(djen.dataFinal), '2025-04-24');
+
+  const estimativaEnvioUtil = estimarDisponibilizacaoPorEnvio(new Date('2026-03-10T16:00:00'));
+  assert.equal(formatDateKey(estimativaEnvioUtil.disponibilizacaoEstimada), '2026-03-11');
+  assert.equal(estimativaEnvioUtil.exigeAvisoConferencia, false);
+
+  const estimativaEnvioApos17 = estimarDisponibilizacaoPorEnvio(new Date('2026-03-10T18:00:00'));
+  assert.equal(formatDateKey(estimativaEnvioApos17.disponibilizacaoEstimada), '2026-03-12');
+  assert.equal(estimativaEnvioApos17.exigeAvisoConferencia, true);
+
+  const djenEstimado = calcularDJENEstimado({ dataEnvio: new Date('2026-03-10T18:00:00'), prazoDias: 2 });
+  assert.equal(djenEstimado.statusCiencia, 'estimado');
+  assert.equal(formatDateKey(djenEstimado.publicacao), '2026-03-13');
 
   const domIntConfirmada = calcularDomicilioIntimacao({
     dataBase: new Date('2026-03-10T00:00:00'),
@@ -130,6 +151,32 @@ function run() {
     situacaoCiencia: 'confirmada'
   });
   assert.equal(semData.ok, false);
+
+  const calculoEnvioEstimado = calcularPrazoDetalhado({
+    canal: 'djen_envio',
+    tipoAto: 'comunicacao_geral',
+    destinatario: 'parte_privada',
+    tema: 'comum',
+    naturezaPrazo: 'comum',
+    prazoConcedido: '5',
+    dataBase: '2026-03-10T18:00',
+    situacaoCiencia: 'confirmada'
+  });
+  assert.equal(calculoEnvioEstimado.ok, true);
+  assert.equal(calculoEnvioEstimado.status, 'Estimado');
+
+  const calculoSistemaMp = calcularPrazoDetalhado({
+    canal: 'sistema_mp',
+    tipoAto: 'comunicacao_geral',
+    destinatario: 'mp',
+    tema: 'comum',
+    naturezaPrazo: 'comum',
+    prazoConcedido: '5',
+    dataBase: '2026-03-10',
+    situacaoCiencia: 'confirmada'
+  });
+  assert.equal(calculoSistemaMp.ok, true);
+  assert.equal(calculoSistemaMp.regimePrazo, 'dobro');
 
   console.log('Todos os testes passaram.');
 }
