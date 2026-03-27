@@ -33,7 +33,7 @@
         }
 
         .container, .manual {
-            max-width: 900px;
+            max-width: 980px;
             margin: 0 auto;
             background: var(--card);
             border-radius: 14px;
@@ -98,6 +98,16 @@
             display: none;
         }
 
+        .resultado.confirmado {
+            border-color: #b8dfc8;
+            background: #f7fffa;
+        }
+
+        .resultado.estimado {
+            border-color: #ffd09a;
+            background: #fffaf2;
+        }
+
         .resultado dl {
             margin: 0;
             display: grid;
@@ -110,6 +120,12 @@
 
         ul { margin: 8px 0 0; padding-left: 20px; }
 
+        .bloco-raciocinio {
+            margin-top: 12px;
+            border-top: 1px dashed var(--line);
+            padding-top: 10px;
+        }
+
         @media (max-width: 760px) {
             .grid { grid-template-columns: 1fr; }
             .resultado dl { grid-template-columns: 1fr; }
@@ -120,19 +136,21 @@
 <body>
     <div class="container">
         <h1>Calculadora de Prazos Judiciais</h1>
-        <p class="sub">Refatorada para Domicílio Judicial Eletrônico, prazo em dobro, prazo próprio e alertas de conferência.</p>
+        <p class="sub">Calculadora da 2ª Vara Cível e Empresarial de Icoaraci com fluxo completo de prazo e distinção entre cálculo confirmado e estimado.</p>
 
         <div class="grid">
             <div>
                 <label for="canal">Canal de comunicação</label>
                 <select id="canal" onchange="atualizarCamposDinamicos()">
-                    <option value="djen">DJEN</option>
-                    <option value="domicilio">Domicílio Judicial Eletrônico</option>
+                    <option value="djen">DJEN — disponibilização confirmada</option>
+                    <option value="djen_envio">DJEN — envio para estimativa</option>
                     <option value="sistema">Sistema/portal eletrônico</option>
+                    <option value="sistema_mp">Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia</option>
                 </select>
+                <p class="help">Selecione a modalidade correta para evitar mistura entre DJEN e intimação por portal.</p>
             </div>
 
-            <div>
+            <div id="blocoTipoAto" style="display:none;">
                 <label for="tipoAto">Tipo do ato</label>
                 <select id="tipoAto" onchange="atualizarCamposDinamicos()">
                     <option value="intimacao_pessoal">Intimação pessoal</option>
@@ -152,6 +170,7 @@
                     <option value="fundacao_publica">Fundação de direito público</option>
                     <option value="defensor_dativo">Defensor dativo</option>
                 </select>
+                <p class="help">No modo "Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia", use o destinatário institucional para aplicar dobra quando cabível.</p>
             </div>
 
             <div>
@@ -184,7 +203,7 @@
                 <input id="prazoConcedido" type="number" min="1" value="15">
             </div>
 
-            <div>
+            <div id="blocoSituacao" style="display:none;">
                 <label for="situacaoCiencia">Situação da ciência/consulta</label>
                 <select id="situacaoCiencia">
                     <option value="confirmada">Ciência confirmada</option>
@@ -211,6 +230,7 @@
         <div id="alertaDobro" class="badge ok"></div>
         <div id="alertaProprio" class="badge info"></div>
         <div id="alertaConferencia" class="badge warn"></div>
+        <div id="alertaEstimativaDJEN" class="badge warn"></div>
         <div id="alertaDativo" class="badge warn"></div>
 
         <section id="resultado" class="resultado"></section>
@@ -219,6 +239,10 @@
     <section class="manual">
         <h2>Manual de consulta rápida</h2>
         <ul>
+            <li><strong>DJEN confirmado:</strong> disponibilização ➜ publicação (próximo dia útil) ➜ início (próximo dia útil) ➜ vencimento em dias úteis.</li>
+            <li><strong>DJEN estimado:</strong> envio em dia útil até 17h estima disponibilização no próximo dia útil; fora disso, estimativa conservadora com aviso de conferência.</li>
+            <li><strong>Sistema/portal eletrônico:</strong> mantém cálculo atual de início no próximo dia útil da ciência/intimação.</li>
+            <li><strong>Sistema/portal MP/DP/Fazenda/Autarquia:</strong> mantém cálculo atual e permite contagem em dobro quando cabível.</li>
             <li><strong>MP:</strong> prazo em dobro, salvo prazo próprio legal.</li>
             <li><strong>Defensoria Pública:</strong> prazo em dobro, salvo prazo próprio legal.</li>
             <li><strong>Fazenda Pública, autarquias e fundações públicas:</strong> prazo em dobro, salvo prazo próprio legal.</li>
@@ -234,48 +258,54 @@
     <script>
         function atualizarCamposDinamicos() {
             const canal = document.getElementById('canal').value;
-            const tipoAto = document.getElementById('tipoAto').value;
             const situacao = document.getElementById('situacaoCiencia');
+            const blocoSituacao = document.getElementById('blocoSituacao');
+            const blocoTipoAto = document.getElementById('blocoTipoAto');
             const label = document.getElementById('labelDataBase');
+            const dataBase = document.getElementById('dataBase');
             const ajuda = document.getElementById('ajudaDataBase');
             const descricao = document.getElementById('descricaoDinamica');
 
-            if (canal === 'domicilio') {
-                situacao.disabled = false;
-
-                if (tipoAto === 'citacao_eletronica') {
-                    label.innerText = 'Data-base (confirmação da citação ou envio)';
-                    ajuda.innerText = 'Confirmada: data da confirmação. Sem consulta: data do envio para contagem de 10 dias corridos.';
-                    descricao.innerText = 'Domicílio (citação): confirmação inicia no 5º dia útil seguinte; sem consulta em PJ de direito público pode gerar citação automática em 10 dias corridos.';
-                } else {
-                    label.innerText = 'Data-base (consulta/intimação ou envio)';
-                    ajuda.innerText = 'Confirmada: data da ciência. Sem consulta: data de envio para ciência automática em 10 dias corridos.';
-                    descricao.innerText = 'Domicílio (intimação pessoal): início no dia útil seguinte à consulta, ou ciência automática após 10 dias corridos sem consulta.';
-                }
-                return;
-            }
-
+            blocoSituacao.style.display = 'none';
+            blocoTipoAto.style.display = 'none';
             situacao.value = 'confirmada';
             situacao.disabled = true;
+            document.getElementById('tipoAto').value = 'comunicacao_geral';
 
             if (canal === 'djen') {
-                label.innerText = 'Data-base (disponibilização)';
-                ajuda.innerText = 'O sistema calcula publicação no próximo dia útil e início no dia útil seguinte.';
-                descricao.innerText = 'DJEN: fluxo clássico disponibilização → publicação → início do prazo.';
+                label.innerText = 'Data de disponibilização';
+                dataBase.type = 'date';
+                dataBase.step = '';
+                ajuda.innerText = 'Lei 11.419/2006, art. 4º: publicação no próximo dia útil e início no dia útil seguinte.';
+                descricao.innerText = 'Status confirmado: cálculo oficial pelo fluxo disponibilização → publicação → início → vencimento.';
                 return;
             }
 
-            label.innerText = 'Data-base (ciência/intimação)';
-            ajuda.innerText = 'Regra geral do CPC: início no próximo dia útil.';
-            descricao.innerText = 'Sistema/portal: cálculo processual em dias úteis, com checagem de prazo em dobro e prazos próprios.';
+            if (canal === 'djen_envio') {
+                label.innerText = 'Data e hora do envio';
+                dataBase.type = 'datetime-local';
+                dataBase.step = '60';
+                ajuda.innerText = 'Resolução TJPA 14/2021: envio em dia útil até 17h estima disponibilização no próximo dia útil.';
+                descricao.innerText = 'Status estimado: cálculo prévio com alerta obrigatório para conferência da disponibilização no DJEN/CNJ.';
+                return;
+            }
+
+            dataBase.type = 'date';
+            dataBase.step = '';
+            label.innerText = 'Data da ciência/intimação';
+            ajuda.innerText = 'Regra geral mantida: início no próximo dia útil, com feriados cadastrados.';
+            descricao.innerText = canal === 'sistema_mp'
+                ? 'Sistema/portal (MP/DP/Fazenda/Autarquia): mantém a base atual com possível prazo em dobro.'
+                : 'Sistema/portal eletrônico: mantém a lógica separada do DJEN.';
         }
 
         function ocultarMensagens() {
             document.getElementById('erro').style.display = 'none';
-            ['alertaDobro', 'alertaProprio', 'alertaConferencia', 'alertaDativo'].forEach((id) => {
+            ['alertaDobro', 'alertaProprio', 'alertaConferencia', 'alertaEstimativaDJEN', 'alertaDativo'].forEach((id) => {
                 document.getElementById(id).style.display = 'none';
             });
             const resultado = document.getElementById('resultado');
+            resultado.className = 'resultado';
             resultado.style.display = 'none';
             resultado.innerHTML = '';
         }
@@ -299,11 +329,15 @@
                 regimePrazo: 'Regime do prazo',
                 prazoEfetivo: 'Prazo efetivo',
                 vencimento: 'Data final',
+                disponibilizacao: 'Disponibilização',
+                disponibilizacaoEstimada: 'Disponibilização estimada',
+                envio: 'Envio',
                 cienciaConfirmada: 'Ciência confirmada',
                 cienciaAutomatica: 'Ciência automática',
                 citacaoConfirmada: 'Citação confirmada',
                 citacaoAutomatica: 'Citação automática',
-                publicacao: 'Publicação'
+                publicacao: 'Publicação',
+                publicacaoEstimada: 'Publicação estimada'
             };
             return labels[chave] || chave;
         }
@@ -311,15 +345,20 @@
         function exibirResultado(calculo) {
             const resultado = document.getElementById('resultado');
             const entradas = Object.entries(calculo.marcoTemporal || {});
+            resultado.classList.add(calculo.status === 'Estimado' ? 'estimado' : 'confirmado');
 
             resultado.innerHTML = `
                 <h3>Resultado do cálculo</h3>
                 <p><strong>Marco legal utilizado:</strong> ${calculo.marcoLegal}</p>
-                <p><strong>Status da ciência:</strong> ${calculo.status}</p>
+                <p><strong>Status do cálculo:</strong> ${calculo.status}</p>
                 <dl>
                     ${entradas.map(([chave, valor]) => `<dt>${formatarLabel(chave)}</dt><dd>${valor}</dd>`).join('')}
                     <dt>Dias úteis decorridos até hoje</dt><dd>${calculo.diasDecorridos}</dd>
                 </dl>
+                <div class="bloco-raciocinio">
+                    <p><strong>Raciocínio aplicado:</strong></p>
+                    <ul>${entradas.map(([chave, valor]) => `<li><strong>${formatarLabel(chave)}:</strong> ${valor}</li>`).join('')}</ul>
+                </div>
                 ${calculo.observacoes?.length ? `<p><strong>Observações:</strong></p><ul>${calculo.observacoes.map((item) => `<li>${item}</li>`).join('')}</ul>` : ''}
             `;
 
@@ -335,6 +374,10 @@
 
             if (calculo.aviso.includes('Depende de conferência') || calculo.status.includes('Bloqueado')) {
                 mostrarAlerta('alertaConferencia', 'Depende de conferência');
+            }
+
+            if (calculo.status === 'Estimado') {
+                mostrarAlerta('alertaEstimativaDJEN', 'Este cálculo é uma estimativa prévia. Confira a data de disponibilização no DJEN/CNJ assim que a publicação constar no sistema.');
             }
 
             const dativo = (calculo.observacoes || []).some((item) => item.includes('Defensor dativo'));
@@ -356,6 +399,14 @@
                 dataBase: document.getElementById('dataBase').value,
                 situacaoCiencia: document.getElementById('situacaoCiencia').value
             };
+
+            if (payload.canal === 'sistema_mp') {
+                const institucionais = new Set(['mp', 'defensoria', 'fazenda', 'autarquia', 'fundacao_publica']);
+                if (!institucionais.has(payload.destinatario)) {
+                    exibirErro('Na modalidade Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia, selecione destinatário institucional.');
+                    return;
+                }
+            }
 
             const calculo = window.PrazoUtils.calcularPrazoDetalhado(payload);
             if (!calculo.ok) {

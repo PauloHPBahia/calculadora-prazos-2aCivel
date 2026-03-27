@@ -29,6 +29,21 @@
     return parsed;
   }
 
+  function parseDateTimeFromInput(value) {
+    if (!value) return null;
+    const [dataParte, horaParte] = String(value).trim().split('T');
+    const data = parseDateFromInput(dataParte);
+    if (!data || !horaParte) return null;
+
+    const [hora, minuto] = horaParte.split(':').map((n) => Number.parseInt(n, 10));
+    if (!Number.isInteger(hora) || !Number.isInteger(minuto) || hora < 0 || hora > 23 || minuto < 0 || minuto > 59) {
+      return null;
+    }
+
+    data.setHours(hora, minuto, 0, 0);
+    return data;
+  }
+
   function addDays(data, quantidade) {
     const copia = new Date(data);
     copia.setDate(copia.getDate() + quantidade);
@@ -79,12 +94,42 @@
     return cursor;
   }
 
+  function calcularPublicacaoDJEN(dataDisponibilizacao) {
+    return proximoDiaUtil(dataDisponibilizacao);
+  }
+
+  function calcularInicioPrazo(dataPublicacao) {
+    return proximoDiaUtil(dataPublicacao);
+  }
+
+  function contarPrazoDiasUteis(dataInicio, prazoDias) {
+    return somarDiasUteis(dataInicio, prazoDias);
+  }
+
+  function estimarDisponibilizacaoPorEnvio(dataEnvio) {
+    const diaUtil = isDiaUtil(dataEnvio);
+    const ateDezessete = dataEnvio.getHours() < 17 || (dataEnvio.getHours() === 17 && dataEnvio.getMinutes() === 0);
+    const estimativaSimples = diaUtil && ateDezessete;
+    const disponibilizacaoEstimada = estimativaSimples
+      ? proximoDiaUtil(dataEnvio)
+      : proximoDiaUtil(proximoDiaUtil(dataEnvio));
+
+    return {
+      disponibilizacaoEstimada,
+      statusCiencia: 'estimado',
+      exigeAvisoConferencia: !estimativaSimples,
+      observacaoEstimativa: estimativaSimples
+        ? 'Estimativa com base na Resolução TJPA nº 14/2021 (envio em dia útil até 17h).'
+        : 'Envio após 17h ou em dia não útil: estimativa conservadora para o próximo ciclo útil possível.'
+    };
+  }
+
   // Fluxo clássico DJEN: disponibilização -> publicação (dia útil seguinte) -> início do prazo (dia útil seguinte à publicação).
   function calcularDJEN({ dataBase, prazoDias }) {
     const disponibilizacao = new Date(dataBase);
-    const publicacao = proximoDiaUtil(disponibilizacao);
-    const inicioPrazo = proximoDiaUtil(publicacao);
-    const dataFinal = somarDiasUteis(inicioPrazo, prazoDias);
+    const publicacao = calcularPublicacaoDJEN(disponibilizacao);
+    const inicioPrazo = calcularInicioPrazo(publicacao);
+    const dataFinal = contarPrazoDiasUteis(inicioPrazo, prazoDias);
 
     return {
       statusCiencia: 'confirmada',
@@ -94,6 +139,29 @@
       inicioPrazo,
       dataFinal,
       observacoes: []
+    };
+  }
+
+  function calcularDJENEstimado({ dataEnvio, prazoDias }) {
+    const estimativa = estimarDisponibilizacaoPorEnvio(dataEnvio);
+    const publicacaoEstimada = calcularPublicacaoDJEN(estimativa.disponibilizacaoEstimada);
+    const inicioPrazoEstimado = calcularInicioPrazo(publicacaoEstimada);
+    const dataFinal = contarPrazoDiasUteis(inicioPrazoEstimado, prazoDias);
+    const observacoes = [
+      estimativa.observacaoEstimativa,
+      'Este cálculo é uma estimativa prévia. Confira a data de disponibilização no DJEN/CNJ assim que a publicação constar no sistema.'
+    ];
+
+    return {
+      statusCiencia: 'estimado',
+      marcoLegal: 'Lei 11.419/2006, art. 4º, §§3º e 4º; CPC, arts. 219 e 224; Resolução TJPA nº 14/2021',
+      envio: new Date(dataEnvio),
+      disponibilizacaoEstimada: estimativa.disponibilizacaoEstimada,
+      publicacao: publicacaoEstimada,
+      inicioPrazo: inicioPrazoEstimado,
+      dataFinal,
+      exigeAvisoConferencia: estimativa.exigeAvisoConferencia,
+      observacoes
     };
   }
 
@@ -362,10 +430,14 @@
       return { ok: false, erro: 'Informe um prazo concedido válido (inteiro maior que zero).' };
     }
 
-    const dataBase = parseDateFromInput(entrada.dataBase);
-    if (!dataBase) {
-      return { ok: false, erro: 'Data-base inválida. Use o formato de data do campo.' };
+    if (entrada.canal === 'djen_envio') {
+      const dataEnvio = parseDateTimeFromInput(entrada.dataBase);
+      if (!dataEnvio) return { ok: false, erro: 'Data/hora de envio inválida. Use o formato do campo.' };
+      return { ok: true, prazoConcedido, dataEnvio };
     }
+
+    const dataBase = parseDateFromInput(entrada.dataBase);
+    if (!dataBase) return { ok: false, erro: 'Data-base inválida. Use o formato de data do campo.' };
 
     return { ok: true, prazoConcedido, dataBase };
   }
@@ -374,11 +446,13 @@
     const validacao = validarCamposObrigatorios(entrada);
     if (!validacao.ok) return validacao;
 
-    const { prazoConcedido, dataBase } = validacao;
+    const { prazoConcedido, dataBase, dataEnvio } = validacao;
 
     let fluxoComunicacao;
     if (entrada.canal === 'djen') {
       fluxoComunicacao = calcularDJEN({ dataBase, prazoDias: prazoConcedido });
+    } else if (entrada.canal === 'djen_envio') {
+      fluxoComunicacao = calcularDJENEstimado({ dataEnvio, prazoDias: prazoConcedido });
     } else if (entrada.canal === 'domicilio') {
       fluxoComunicacao = entrada.tipoAto === 'citacao_eletronica'
         ? calcularDomicilioCitacao({ dataBase, situacaoCiencia: entrada.situacaoCiencia, destinatario: entrada.destinatario })
@@ -412,7 +486,7 @@
     });
 
     if (fluxoComunicacao.inicioPrazo && !fluxoComunicacao.dataFinal && !fluxoComunicacao.bloqueado) {
-      fluxoComunicacao.dataFinal = somarDiasUteis(fluxoComunicacao.inicioPrazo, prazoInfo.prazoDiasFinal);
+      fluxoComunicacao.dataFinal = contarPrazoDiasUteis(fluxoComunicacao.inicioPrazo, prazoInfo.prazoDiasFinal);
     }
 
     const resumo = montarResumoResultado({ fluxoComunicacao, prazoInfo, verificacaoTema });
@@ -425,18 +499,31 @@
       vencimento: resumo.dataFinal ? formatDatePtBr(resumo.dataFinal) : '—'
     };
 
+    if (fluxoComunicacao.disponibilizacao) marcoTemporal.disponibilizacao = formatDatePtBr(fluxoComunicacao.disponibilizacao);
+    if (fluxoComunicacao.disponibilizacaoEstimada) marcoTemporal.disponibilizacaoEstimada = formatDatePtBr(fluxoComunicacao.disponibilizacaoEstimada);
+    if (fluxoComunicacao.envio) marcoTemporal.envio = fluxoComunicacao.envio.toLocaleString('pt-BR');
     if (fluxoComunicacao.cienciaConfirmada) marcoTemporal.cienciaConfirmada = formatDatePtBr(fluxoComunicacao.cienciaConfirmada);
     if (fluxoComunicacao.cienciaAutomatica) marcoTemporal.cienciaAutomatica = formatDatePtBr(fluxoComunicacao.cienciaAutomatica);
     if (fluxoComunicacao.citacaoConfirmada) marcoTemporal.citacaoConfirmada = formatDatePtBr(fluxoComunicacao.citacaoConfirmada);
     if (fluxoComunicacao.citacaoAutomatica) marcoTemporal.citacaoAutomatica = formatDatePtBr(fluxoComunicacao.citacaoAutomatica);
-    if (fluxoComunicacao.publicacao) marcoTemporal.publicacao = formatDatePtBr(fluxoComunicacao.publicacao);
+    if (fluxoComunicacao.publicacao) {
+      const chavePublicacao = fluxoComunicacao.statusCiencia === 'estimado' ? 'publicacaoEstimada' : 'publicacao';
+      marcoTemporal[chavePublicacao] = formatDatePtBr(fluxoComunicacao.publicacao);
+    }
+    if ((entrada.canal === 'sistema' || entrada.canal === 'sistema_mp') && dataBase) {
+      marcoTemporal.cienciaConfirmada = formatDatePtBr(dataBase);
+    }
 
     return {
       ok: true,
-      status: resumo.bloqueado ? 'Bloqueado / depende de conferência' : resumo.statusCiencia,
+      status: resumo.bloqueado
+        ? 'Bloqueado / depende de conferência'
+        : (resumo.statusCiencia === 'confirmada'
+          ? 'Confirmado'
+          : ((resumo.statusCiencia === 'estimativa' || resumo.statusCiencia === 'estimado') ? 'Estimado' : resumo.statusCiencia)),
       marcoLegal: resumo.marcoLegal,
       regimePrazo: resumo.regimePrazo,
-      aviso: resumo.dependeConferencia ? 'Depende de conferência' : '',
+      aviso: resumo.dependeConferencia || fluxoComunicacao.exigeAvisoConferencia ? 'Depende de conferência' : '',
       observacoes: resumo.observacoes,
       marcoTemporal,
       dataInicio: resumo.dataInicio,
@@ -451,7 +538,12 @@
     isDiaUtil,
     proximoDiaUtil,
     somarDiasUteis,
+    calcularPublicacaoDJEN,
+    calcularInicioPrazo,
+    contarPrazoDiasUteis,
+    estimarDisponibilizacaoPorEnvio,
     calcularDJEN,
+    calcularDJENEstimado,
     calcularDomicilioIntimacao,
     calcularDomicilioCitacao,
     aplicarPrazoEmDobroSeCabivel,
@@ -465,7 +557,7 @@
     // aliases de compatibilidade
     ehDiaUtil: isDiaUtil,
     obterProximoDiaUtil: proximoDiaUtil,
-    contarPrazoDiasUteis: somarDiasUteis
+    contarPrazoDiasUteis: contarPrazoDiasUteis
   };
 
   if (typeof module !== 'undefined' && module.exports) {
