@@ -6,411 +6,323 @@
     <title>Calculadora de Prazos Judiciais</title>
     <style>
         :root {
-            --bg: #eef2f8;
-            --card: #fff;
+            --bg: #f3f5f9;
+            --card: #ffffff;
             --text: #172033;
-            --muted: #5a6884;
-            --primary: #1f4e8c;
-            --line: #d6deec;
-            --ok: #e8f7ef;
-            --ok-text: #116737;
-            --warn: #fff4e6;
-            --warn-text: #8f4f00;
-            --danger: #fdeced;
-            --danger-text: #8d1b35;
-            --info: #eaf2ff;
-            --info-text: #214f86;
+            --muted: #5e6a82;
+            --primary: #184f8a;
+            --primary-soft: #eaf2fb;
+            --warning-bg: #fff6e8;
+            --warning-border: #f4b44c;
+            --error-bg: #fdecef;
+            --error-border: #d6425d;
+            --estimated-bg: #fff6e8;
+            --confirmed-bg: #e8f6ed;
         }
 
         * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            padding: 24px 12px;
+            font-family: Arial, sans-serif;
             background: var(--bg);
             color: var(--text);
-            font-family: Arial, sans-serif;
+            padding: 24px 12px;
         }
 
         .container, .manual {
-            max-width: 980px;
+            max-width: 760px;
             margin: 0 auto;
             background: var(--card);
             border-radius: 14px;
-            box-shadow: 0 6px 24px rgba(16, 38, 77, 0.08);
+            box-shadow: 0 4px 20px rgba(23, 32, 51, 0.08);
             padding: 22px;
         }
 
-        .manual { margin-top: 14px; }
-
-        h1 { margin: 0 0 6px; font-size: 1.4rem; }
-        h2 { margin-top: 0; }
-        p.sub { margin: 0 0 16px; color: var(--muted); }
+        h1 { font-size: 1.35rem; margin-top: 0; margin-bottom: 16px; }
+        h2 { font-size: 1.1rem; margin-top: 0; }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: 1fr;
             gap: 12px;
         }
-
-        .full { grid-column: 1 / -1; }
 
         label { display: block; font-weight: 700; margin-bottom: 6px; }
 
         input, select, button {
             width: 100%;
-            border: 1px solid var(--line);
+            border: 1px solid #d3dbea;
             border-radius: 8px;
             padding: 10px 12px;
-            font-size: 0.95rem;
+            font-size: 0.98rem;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid #c5dbf4;
+            border-color: var(--primary);
+        }
+
+        .help {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.3;
         }
 
         button {
-            margin-top: 8px;
+            cursor: pointer;
             border: none;
             font-weight: 700;
-            color: #fff;
             background: var(--primary);
-            cursor: pointer;
+            color: white;
+            margin-top: 8px;
         }
 
-        .help { margin: 5px 0 0; color: var(--muted); font-size: 0.87rem; }
-
-        .erro, .badge {
-            margin-top: 10px;
+        .banner {
+            margin-top: 14px;
             padding: 10px 12px;
+            border-left: 4px solid var(--warning-border);
+            background: var(--warning-bg);
             border-radius: 8px;
-            font-weight: 700;
+            font-size: 0.92rem;
             display: none;
         }
 
-        .erro { background: var(--danger); color: var(--danger-text); }
-
-        .badge.info { background: var(--info); color: var(--info-text); }
-        .badge.ok { background: var(--ok); color: var(--ok-text); }
-        .badge.warn { background: var(--warn); color: var(--warn-text); }
+        .erro {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-left: 4px solid var(--error-border);
+            background: var(--error-bg);
+            border-radius: 8px;
+            color: #8d1b35;
+            font-weight: 600;
+        }
 
         .resultado {
-            margin-top: 14px;
-            border: 1px solid var(--line);
-            border-radius: 10px;
+            margin-top: 16px;
             padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #d9e0ee;
             display: none;
+            text-align: left;
         }
 
-        .resultado.confirmado {
-            border-color: #b8dfc8;
-            background: #f7fffa;
-        }
+        .resultado.confirmado { background: var(--confirmed-bg); }
+        .resultado.estimado { background: var(--estimated-bg); }
 
-        .resultado.estimado {
-            border-color: #ffd09a;
-            background: #fffaf2;
+        .status {
+            display: inline-block;
+            font-size: 0.84rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+            background: var(--primary-soft);
+            color: var(--primary);
         }
 
         .resultado dl {
             margin: 0;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px 14px;
+            gap: 8px 12px;
+            font-size: 0.95rem;
         }
 
-        dt { font-weight: 700; }
-        dd { margin: 0; text-align: right; }
+        .resultado dt { font-weight: 700; }
+        .resultado dd { margin: 0; text-align: right; }
 
-        ul { margin: 8px 0 0; padding-left: 20px; }
-
-        .bloco-raciocinio {
-            margin-top: 12px;
-            border-top: 1px dashed var(--line);
-            padding-top: 10px;
+        .manual {
+            margin-top: 14px;
+            line-height: 1.42;
         }
 
-        @media (max-width: 760px) {
-            .grid { grid-template-columns: 1fr; }
+        .manual ul { padding-left: 20px; }
+
+        @media (max-width: 520px) {
             .resultado dl { grid-template-columns: 1fr; }
-            dd { text-align: left; }
+            .resultado dd { text-align: left; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Calculadora de Prazos Judiciais</h1>
-        <p class="sub">Calculadora da 2ª Vara Cível e Empresarial de Icoaraci com fluxo completo de prazo e distinção entre cálculo confirmado e estimado.</p>
+        <h1>Calculadora de Prazos Judiciais da 2ª Vara Cível e Empresarial de Icoaraci</h1>
 
         <div class="grid">
             <div>
-                <label for="canal">Canal de comunicação</label>
-                <select id="canal" onchange="atualizarCamposDinamicos()">
-                    <option value="djen">DJEN — disponibilização confirmada</option>
-                    <option value="djen_envio">DJEN — envio para estimativa</option>
+                <label for="meioIntimacao">Modalidade</label>
+                <select id="meioIntimacao" onchange="atualizarCamposDinamicos()">
+                    <option value="djen_confirmado">DJEN — disponibilização confirmada</option>
+                    <option value="djen_estimativa">DJEN — envio para estimativa</option>
                     <option value="sistema">Sistema/portal eletrônico</option>
-                    <option value="sistema_mp">Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia</option>
+                    <option value="sistema_autarquia">Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia</option>
                 </select>
-                <p class="help">Selecione a modalidade correta para evitar mistura entre DJEN e intimação por portal.</p>
-            </div>
-
-            <div id="blocoTipoAto" style="display:none;">
-                <label for="tipoAto">Tipo do ato</label>
-                <select id="tipoAto" onchange="atualizarCamposDinamicos()">
-                    <option value="intimacao_pessoal">Intimação pessoal</option>
-                    <option value="citacao_eletronica">Citação eletrônica</option>
-                    <option value="comunicacao_geral">Comunicação/manifestação processual</option>
-                </select>
+                <p class="help" id="descricaoModalidade"></p>
             </div>
 
             <div>
-                <label for="destinatario">Destinatário</label>
-                <select id="destinatario">
-                    <option value="parte_privada">Parte privada</option>
-                    <option value="mp">Ministério Público</option>
-                    <option value="defensoria">Defensoria Pública</option>
-                    <option value="fazenda">Fazenda Pública</option>
-                    <option value="autarquia">Autarquia</option>
-                    <option value="fundacao_publica">Fundação de direito público</option>
-                    <option value="defensor_dativo">Defensor dativo</option>
-                </select>
-                <p class="help">No modo "Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia", use o destinatário institucional para aplicar dobra quando cabível.</p>
-            </div>
-
-            <div>
-                <label for="tema">Tema do procedimento</label>
-                <select id="tema">
-                    <option value="comum">Comum</option>
-                    <option value="registros_publicos">Registros públicos</option>
-                    <option value="recuperacao_judicial">Recuperação judicial</option>
-                    <option value="falencia">Falência</option>
-                    <option value="acidente_trabalho">Acidente de trabalho</option>
-                    <option value="busca_apreensao_fiduciaria">Busca e apreensão em alienação fiduciária</option>
-                    <option value="reintegracao_posse">Reintegração de posse</option>
-                    <option value="manutencao_posse">Manutenção de posse</option>
-                    <option value="interdito_proibitorio">Interdito proibitório</option>
-                    <option value="execucao_titulo">Execução de título extrajudicial</option>
-                </select>
-            </div>
-
-            <div>
-                <label for="naturezaPrazo">Natureza do prazo</label>
-                <select id="naturezaPrazo">
-                    <option value="comum">Prazo processual comum</option>
-                    <option value="proprio_lei_especial">Prazo próprio de lei especial</option>
-                    <option value="nao_sei">Não sei</option>
-                </select>
+                <label id="labelData" for="dataReferencia">Data de disponibilização</label>
+                <input type="date" id="dataReferencia" onkeydown="if(event.key === 'Enter') document.getElementById('prazoConcedido').focus();">
+                <p class="help" id="ajudaData"></p>
             </div>
 
             <div>
                 <label for="prazoConcedido">Prazo concedido (dias úteis)</label>
-                <input id="prazoConcedido" type="number" min="1" value="15">
-            </div>
-
-            <div id="blocoSituacao" style="display:none;">
-                <label for="situacaoCiencia">Situação da ciência/consulta</label>
-                <select id="situacaoCiencia">
-                    <option value="confirmada">Ciência confirmada</option>
-                    <option value="sem_consulta">Sem consulta (automática em 10 corridos)</option>
-                    <option value="estimativa">Estimativa</option>
-                    <option value="bloqueado">Bloqueado / depende de conferência</option>
-                </select>
-            </div>
-
-            <div>
-                <label id="labelDataBase" for="dataBase">Data-base</label>
-                <input id="dataBase" type="date">
-                <p class="help" id="ajudaDataBase"></p>
-            </div>
-
-            <div class="full">
-                <p class="help" id="descricaoDinamica"></p>
-                <button onclick="calcularPrazo()">Calcular prazo</button>
+                <input type="number" id="prazoConcedido" min="1" onkeydown="if(event.key === 'Enter') calcularPrazo();">
+                <p class="help">A contagem considera os feriados cadastrados no sistema.</p>
             </div>
         </div>
 
-        <div id="erro" class="erro"></div>
+        <button onclick="calcularPrazo()">Calcular prazo</button>
 
-        <div id="alertaDobro" class="badge ok"></div>
-        <div id="alertaProprio" class="badge info"></div>
-        <div id="alertaConferencia" class="badge warn"></div>
-        <div id="alertaEstimativaDJEN" class="badge warn"></div>
-        <div id="alertaDativo" class="badge warn"></div>
+        <div class="banner" id="bannerAviso"></div>
+        <div id="erro" class="erro" style="display:none"></div>
 
-        <section id="resultado" class="resultado"></section>
+        <section class="resultado" id="resultado"></section>
     </div>
 
-    <section class="manual">
-        <h2>Manual de consulta rápida</h2>
+    <div class="manual">
+        <h2>Manual de uso (resumo)</h2>
         <ul>
-            <li><strong>DJEN confirmado:</strong> disponibilização ➜ publicação (próximo dia útil) ➜ início (próximo dia útil) ➜ vencimento em dias úteis.</li>
-            <li><strong>DJEN estimado:</strong> envio em dia útil até 17h estima disponibilização no próximo dia útil; fora disso, estimativa conservadora com aviso de conferência.</li>
-            <li><strong>Sistema/portal eletrônico:</strong> mantém cálculo atual de início no próximo dia útil da ciência/intimação.</li>
-            <li><strong>Sistema/portal MP/DP/Fazenda/Autarquia:</strong> mantém cálculo atual e permite contagem em dobro quando cabível.</li>
-            <li><strong>MP:</strong> prazo em dobro, salvo prazo próprio legal.</li>
-            <li><strong>Defensoria Pública:</strong> prazo em dobro, salvo prazo próprio legal.</li>
-            <li><strong>Fazenda Pública, autarquias e fundações públicas:</strong> prazo em dobro, salvo prazo próprio legal.</li>
-            <li><strong>Defensor dativo:</strong> não tem prazo em dobro.</li>
-            <li><strong>Registros públicos:</strong> normalmente seguir a lei especial.</li>
-            <li><strong>Recuperação judicial e falência:</strong> normalmente seguir a Lei 11.101/2005.</li>
-            <li><strong>Busca e apreensão fiduciária:</strong> normalmente seguir o DL 911/1969.</li>
-            <li><strong>Execução contra a Fazenda:</strong> usar o prazo próprio do art. 910 do CPC.</li>
+            <li><strong>DJEN — disponibilização confirmada:</strong> informe a data da disponibilização. O sistema calcula publicação (próximo dia útil), início do prazo (próximo dia útil após publicação) e vencimento.</li>
+            <li><strong>DJEN — envio para estimativa:</strong> informe apenas a data do envio. O cálculo ignora horário e projeta disponibilização, publicação e início do prazo sempre no próximo dia útil subsequente.</li>
+            <li><strong>Sistema/portal eletrônico:</strong> mantém lógica de ciência/intimação em portal, com contagem em dias úteis.</li>
+            <li><strong>Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia:</strong> mantém lógica separada com prazo contado em dobro.</li>
         </ul>
-    </section>
+        <p><strong>Base legal orientativa:</strong> Lei 11.419/2006, art. 4º, §§ 3º e 4º; CPC, arts. 219 e 224, §§ 2º e 3º; regra operacional do TJPA (Resolução nº 14/2021) para previsão de disponibilização do DJEN.</p>
+    </div>
 
     <script src="prazo.js"></script>
     <script>
+        const configuracaoModalidade = {
+            djen_confirmado: {
+                tipoInput: 'date',
+                label: 'Data de disponibilização',
+                ajuda: 'Data oficialmente exibida no DJEN/CNJ.',
+                descricao: 'Cálculo confirmado com marcos completos do DJEN.'
+            },
+            djen_estimativa: {
+                tipoInput: 'date',
+                label: 'Data do envio',
+                ajuda: 'Use apenas a data em que a matéria foi enviada para publicação.',
+                descricao: 'Pré-cálculo para rotina da secretaria. Resultado com status Estimado.'
+            },
+            djen_envio: {
+                tipoInput: 'date',
+                label: 'Data do envio',
+                ajuda: 'Use apenas a data em que a matéria foi enviada para publicação.',
+                descricao: 'Pré-cálculo para rotina da secretaria. Resultado com status Estimado.'
+            },
+            sistema: {
+                tipoInput: 'date',
+                label: 'Data de ciência/intimação no sistema',
+                ajuda: 'Modalidade distinta do DJEN. Mantém a lógica atual do portal.',
+                descricao: 'Intimação via portal eletrônico (sem regra de publicação do DJEN).'
+            },
+            sistema_autarquia: {
+                tipoInput: 'date',
+                label: 'Data de ciência/intimação no sistema',
+                ajuda: 'Mantém contagem separada com prazo em dobro.',
+                descricao: 'Portal eletrônico para MP/DP/Fazenda/Autarquia.'
+            },
+            sistema_mp: {
+                tipoInput: 'date',
+                label: 'Data de ciência/intimação no sistema',
+                ajuda: 'Mantém contagem separada com prazo em dobro.',
+                descricao: 'Portal eletrônico para MP/DP/Fazenda/Autarquia.'
+            }
+        };
+
         function atualizarCamposDinamicos() {
-            const canal = document.getElementById('canal').value;
-            const situacao = document.getElementById('situacaoCiencia');
-            const blocoSituacao = document.getElementById('blocoSituacao');
-            const blocoTipoAto = document.getElementById('blocoTipoAto');
-            const label = document.getElementById('labelDataBase');
-            const dataBase = document.getElementById('dataBase');
-            const ajuda = document.getElementById('ajudaDataBase');
-            const descricao = document.getElementById('descricaoDinamica');
+            const meio = document.getElementById('meioIntimacao').value;
+            const cfg = configuracaoModalidade[meio] || configuracaoModalidade.djen_confirmado;
+            const inputData = document.getElementById('dataReferencia');
 
-            blocoSituacao.style.display = 'none';
-            blocoTipoAto.style.display = 'none';
-            situacao.value = 'confirmada';
-            situacao.disabled = true;
-            document.getElementById('tipoAto').value = 'comunicacao_geral';
-
-            if (canal === 'djen') {
-                label.innerText = 'Data de disponibilização';
-                dataBase.type = 'date';
-                dataBase.step = '';
-                ajuda.innerText = 'Lei 11.419/2006, art. 4º: publicação no próximo dia útil e início no dia útil seguinte.';
-                descricao.innerText = 'Status confirmado: cálculo oficial pelo fluxo disponibilização → publicação → início → vencimento.';
-                return;
-            }
-
-            if (canal === 'djen_envio') {
-                label.innerText = 'Data e hora do envio';
-                dataBase.type = 'datetime-local';
-                dataBase.step = '60';
-                ajuda.innerText = 'Resolução TJPA 14/2021: envio em dia útil até 17h estima disponibilização no próximo dia útil.';
-                descricao.innerText = 'Status estimado: cálculo prévio com alerta obrigatório para conferência da disponibilização no DJEN/CNJ.';
-                return;
-            }
-
-            dataBase.type = 'date';
-            dataBase.step = '';
-            label.innerText = 'Data da ciência/intimação';
-            ajuda.innerText = 'Regra geral mantida: início no próximo dia útil, com feriados cadastrados.';
-            descricao.innerText = canal === 'sistema_mp'
-                ? 'Sistema/portal (MP/DP/Fazenda/Autarquia): mantém a base atual com possível prazo em dobro.'
-                : 'Sistema/portal eletrônico: mantém a lógica separada do DJEN.';
+            inputData.type = cfg.tipoInput;
+            inputData.value = '';
+            document.getElementById('labelData').innerText = cfg.label;
+            document.getElementById('ajudaData').innerText = cfg.ajuda;
+            document.getElementById('descricaoModalidade').innerText = cfg.descricao;
+            ocultarMensagens();
         }
 
         function ocultarMensagens() {
             document.getElementById('erro').style.display = 'none';
-            ['alertaDobro', 'alertaProprio', 'alertaConferencia', 'alertaEstimativaDJEN', 'alertaDativo'].forEach((id) => {
-                document.getElementById(id).style.display = 'none';
-            });
+            document.getElementById('bannerAviso').style.display = 'none';
             const resultado = document.getElementById('resultado');
-            resultado.className = 'resultado';
             resultado.style.display = 'none';
             resultado.innerHTML = '';
-        }
-
-        function mostrarAlerta(id, texto) {
-            const el = document.getElementById(id);
-            el.innerText = texto;
-            el.style.display = 'block';
+            resultado.classList.remove('confirmado', 'estimado');
         }
 
         function exibirErro(mensagem) {
             const erro = document.getElementById('erro');
-            erro.innerText = mensagem;
             erro.style.display = 'block';
-        }
-
-        function formatarLabel(chave) {
-            const labels = {
-                inicioPrazo: 'Data de início',
-                prazoConcedido: 'Prazo concedido',
-                regimePrazo: 'Regime do prazo',
-                prazoEfetivo: 'Prazo efetivo',
-                vencimento: 'Data final',
-                disponibilizacao: 'Disponibilização',
-                disponibilizacaoEstimada: 'Disponibilização estimada',
-                envio: 'Envio',
-                cienciaConfirmada: 'Ciência confirmada',
-                cienciaAutomatica: 'Ciência automática',
-                citacaoConfirmada: 'Citação confirmada',
-                citacaoAutomatica: 'Citação automática',
-                publicacao: 'Publicação',
-                publicacaoEstimada: 'Publicação estimada'
-            };
-            return labels[chave] || chave;
+            erro.innerText = mensagem;
         }
 
         function exibirResultado(calculo) {
             const resultado = document.getElementById('resultado');
+            const statusClasse = calculo.status === 'Estimado' ? 'estimado' : 'confirmado';
             const entradas = Object.entries(calculo.marcoTemporal || {});
-            resultado.classList.add(calculo.status === 'Estimado' ? 'estimado' : 'confirmado');
 
+            resultado.classList.add(statusClasse);
             resultado.innerHTML = `
-                <h3>Resultado do cálculo</h3>
-                <p><strong>Marco legal utilizado:</strong> ${calculo.marcoLegal}</p>
-                <p><strong>Status do cálculo:</strong> ${calculo.status}</p>
+                <span class="status">Status: ${calculo.status}</span>
                 <dl>
                     ${entradas.map(([chave, valor]) => `<dt>${formatarLabel(chave)}</dt><dd>${valor}</dd>`).join('')}
-                    <dt>Dias úteis decorridos até hoje</dt><dd>${calculo.diasDecorridos}</dd>
+                    <dt>Dias úteis decorridos até hoje</dt>
+                    <dd>${calculo.diasDecorridos}</dd>
                 </dl>
-                <div class="bloco-raciocinio">
-                    <p><strong>Raciocínio aplicado:</strong></p>
-                    <ul>${entradas.map(([chave, valor]) => `<li><strong>${formatarLabel(chave)}:</strong> ${valor}</li>`).join('')}</ul>
-                </div>
-                ${calculo.observacoes?.length ? `<p><strong>Observações:</strong></p><ul>${calculo.observacoes.map((item) => `<li>${item}</li>`).join('')}</ul>` : ''}
             `;
-
             resultado.style.display = 'block';
 
-            if (calculo.regimePrazo === 'dobro') {
-                mostrarAlerta('alertaDobro', 'Prazo em dobro aplicado');
+            if (calculo.aviso) {
+                const banner = document.getElementById('bannerAviso');
+                banner.innerText = calculo.aviso;
+                banner.style.display = 'block';
             }
+        }
 
-            if (calculo.regimePrazo === 'proprio') {
-                mostrarAlerta('alertaProprio', 'Prazo próprio de lei especial');
-            }
-
-            if (calculo.aviso.includes('Depende de conferência') || calculo.status.includes('Bloqueado')) {
-                mostrarAlerta('alertaConferencia', 'Depende de conferência');
-            }
-
-            if (calculo.status === 'Estimado') {
-                mostrarAlerta('alertaEstimativaDJEN', 'Este cálculo é uma estimativa prévia. Confira a data de disponibilização no DJEN/CNJ assim que a publicação constar no sistema.');
-            }
-
-            const dativo = (calculo.observacoes || []).some((item) => item.includes('Defensor dativo'));
-            if (dativo) {
-                mostrarAlerta('alertaDativo', 'Defensor dativo não possui prazo em dobro');
-            }
+        function formatarLabel(chave) {
+            const labels = {
+                envio: 'Envio',
+                disponibilizacao: 'Disponibilização',
+                publicacao: 'Publicação',
+                inicioPrazo: 'Início do prazo',
+                prazoConcedido: 'Prazo concedido',
+                prazoEfetivo: 'Prazo efetivo',
+                vencimento: 'Vencimento',
+                ciencia: 'Ciência/Intimação'
+            };
+            return labels[chave] || chave;
         }
 
         function calcularPrazo() {
             ocultarMensagens();
 
-            const payload = {
-                canal: document.getElementById('canal').value,
-                tipoAto: document.getElementById('tipoAto').value,
-                destinatario: document.getElementById('destinatario').value,
-                tema: document.getElementById('tema').value,
-                naturezaPrazo: document.getElementById('naturezaPrazo').value,
-                prazoConcedido: document.getElementById('prazoConcedido').value,
-                dataBase: document.getElementById('dataBase').value,
-                situacaoCiencia: document.getElementById('situacaoCiencia').value
-            };
+            const dataReferencia = document.getElementById('dataReferencia').value;
+            const prazoConcedido = document.getElementById('prazoConcedido').value;
+            const meio = document.getElementById('meioIntimacao').value;
+            const meioNormalizado = ({ djen_envio: 'djen_estimativa', sistema_mp: 'sistema_autarquia' })[meio] || meio;
 
-            if (payload.canal === 'sistema_mp') {
-                const institucionais = new Set(['mp', 'defensoria', 'fazenda', 'autarquia', 'fundacao_publica']);
-                if (!institucionais.has(payload.destinatario)) {
-                    exibirErro('Na modalidade Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia, selecione destinatário institucional.');
-                    return;
-                }
+            if (!window.PrazoUtils || typeof window.PrazoUtils.calcularPrazoDetalhado !== 'function') {
+                exibirErro('Erro interno: motor de cálculo não foi carregado. Atualize a página e tente novamente.');
+                return;
             }
 
-            const calculo = window.PrazoUtils.calcularPrazoDetalhado(payload);
+            let calculo;
+            try {
+                calculo = window.PrazoUtils.calcularPrazoDetalhado(dataReferencia, prazoConcedido, meioNormalizado);
+            } catch (err) {
+                exibirErro('Falha ao calcular prazo. Atualize a página (Ctrl+F5) e tente novamente.');
+                return;
+            }
+
             if (!calculo.ok) {
-                exibirErro(calculo.erro || 'Não foi possível calcular. Revise os campos informados.');
+                exibirErro(calculo.erro || 'Não foi possível calcular o prazo. Verifique os campos.');
                 return;
             }
 
