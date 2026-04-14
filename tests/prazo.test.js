@@ -27,8 +27,11 @@ function run() {
   const vencimento = contarPrazoDiasUteis(new Date('2025-04-23T00:00:00'), 3);
   assert.equal(formatDateKey(vencimento), '2025-04-25', 'Contagem em dias úteis deve considerar o dia de início como primeiro dia');
 
-  const estimativaSemCorteHorario = estimarDisponibilizacaoPorEnvio(new Date('2025-04-16T18:00:00'));
-  assert.equal(formatDateKey(estimativaSemCorteHorario.dataDisponibilizacao), '2025-04-22');
+  const estimativaAntesCorte = estimarDisponibilizacaoPorEnvio(new Date('2025-04-16T16:00:00'));
+  assert.equal(formatDateKey(estimativaAntesCorte.dataDisponibilizacao), '2025-04-22');
+
+  const estimativaAposCorte = estimarDisponibilizacaoPorEnvio(new Date('2025-04-16T18:00:00'));
+  assert.equal(formatDateKey(estimativaAposCorte.dataDisponibilizacao), '2025-04-23');
 
   const djenConfirmado = calcularPrazoDetalhado('2025-04-16', '2', 'djen_confirmado', new Date('2025-04-23T00:00:00'));
   assert.equal(djenConfirmado.ok, true);
@@ -39,15 +42,20 @@ function run() {
   assert.equal(djenEstimado.ok, true);
   assert.equal(djenEstimado.status, 'Estimado');
   assert.equal(djenEstimado.aviso.length > 0, true);
-  assert.equal(djenEstimado.marcoTemporal.publicacao, '22/04/2025');
+  assert.equal(djenEstimado.marcoTemporal.publicacao, '23/04/2025');
 
   const djenEstimadoMarco2026 = calcularPrazoDetalhado('2026-02-22', '15', 'djen_estimativa', new Date('2026-03-24T00:00:00'));
   assert.equal(djenEstimadoMarco2026.ok, true);
-  assert.equal(formatDateKey(djenEstimadoMarco2026.dataFinal), '2026-03-16', 'Estimativa DJEN deve considerar início após disponibilização estimada');
+  assert.equal(formatDateKey(djenEstimadoMarco2026.dataFinal), '2026-03-18', 'Estimativa DJEN deve considerar publicação e início em dias úteis subsequentes');
 
   const djenEstimadoComDataHora = calcularPrazoDetalhado('2026-02-22T21:00:00.000Z', '15', 'djen_estimativa', new Date('2026-03-24T00:00:00'));
   assert.equal(djenEstimadoComDataHora.ok, true);
-  assert.equal(formatDateKey(djenEstimadoComDataHora.dataFinal), '2026-03-16', 'Data com horário deve usar apenas o dia informado para evitar deslocamento de fuso');
+  assert.equal(formatDateKey(djenEstimadoComDataHora.dataFinal), '2026-03-18', 'Data com horário deve manter corte de envio e respeitar o fluxo completo de marcos DJEN');
+
+  const djenEstimadoComCorte = calcularPrazoDetalhado('2026-03-10T18:00:00', '5', 'djen_estimativa', new Date('2026-03-31T00:00:00'));
+  assert.equal(djenEstimadoComCorte.ok, true);
+  assert.equal(djenEstimadoComCorte.marcoTemporal.disponibilizacao, '12/03/2026');
+  assert.equal(djenEstimadoComCorte.marcoTemporal.publicacao, '13/03/2026');
 
   const sistema = calcularPrazoDetalhado('2025-04-22', '1', 'sistema', new Date('2025-04-23T00:00:00'));
   assert.equal(sistema.ok, true);
