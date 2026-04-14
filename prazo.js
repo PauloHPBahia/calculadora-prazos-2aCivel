@@ -101,8 +101,8 @@
       cursor = obterProximoDiaUtil(cursor);
     }
 
-    const validacao = validarEntradasComuns(prazoValor, meio);
-    if (!validacao.ok) return validacao;
+    return dias;
+  }
 
   function calcularFluxoSistema(dataCiencia, prazoConcedido, emDobro) {
     const inicioPrazo = obterProximoDiaUtil(dataCiencia);
@@ -142,8 +142,8 @@
       }
 
       const estimativa = estimarDisponibilizacaoPorEnvio(dataEnvio);
-      const publicacao = estimativa.dataDisponibilizacao;
-      const inicioPrazo = calcularInicioPrazo(estimativa.dataDisponibilizacao);
+      const publicacao = calcularPublicacaoDJEN(estimativa.dataDisponibilizacao);
+      const inicioPrazo = calcularInicioPrazo(publicacao);
       const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
 
       return {
