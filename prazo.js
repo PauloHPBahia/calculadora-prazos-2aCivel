@@ -101,8 +101,8 @@
       cursor = obterProximoDiaUtil(cursor);
     }
 
-    const validacao = validarEntradasComuns(prazoValor, meio);
-    if (!validacao.ok) return validacao;
+    return dias;
+  }
 
   function calcularFluxoSistema(dataCiencia, prazoConcedido, emDobro) {
     const inicioPrazo = obterProximoDiaUtil(dataCiencia);
