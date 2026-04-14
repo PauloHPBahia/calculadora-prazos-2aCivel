@@ -84,9 +84,19 @@
 
   function estimarDisponibilizacaoPorEnvio(dataEnvio) {
     const diaEnvio = new Date(dataEnvio);
-    diaEnvio.setHours(0, 0, 0, 0);
+    const envioEmDiaUtil = ehDiaUtil(diaEnvio);
+    const hora = diaEnvio.getHours();
+    const minuto = diaEnvio.getMinutes();
+    const segundo = diaEnvio.getSeconds();
+    const milissegundo = diaEnvio.getMilliseconds();
+    const ateHorarioLimite = hora < 17
+      || (hora === 17 && minuto === 0 && segundo === 0 && milissegundo === 0);
+    const primeiraJanelaUtil = obterProximoDiaUtil(diaEnvio);
+
     return {
-      dataDisponibilizacao: obterProximoDiaUtil(diaEnvio)
+      dataDisponibilizacao: (envioEmDiaUtil && ateHorarioLimite)
+        ? primeiraJanelaUtil
+        : obterProximoDiaUtil(primeiraJanelaUtil)
     };
   }
 
@@ -100,9 +110,24 @@
       if (ehDiaUtil(cursor)) dias += 1;
       cursor = obterProximoDiaUtil(cursor);
     }
+    return dias;
+  }
 
-    const validacao = validarEntradasComuns(prazoValor, meio);
-    if (!validacao.ok) return validacao;
+  function parseDataEnvioEstimativa(valor) {
+    if (!valor) return null;
+    if (valor instanceof Date) {
+      return Number.isNaN(valor.getTime()) ? null : new Date(valor);
+    }
+    const texto = String(valor).trim();
+    if (!texto) return null;
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+      return parseDateFromInput(texto);
+    }
+
+    const parsed = new Date(texto);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
 
   function calcularFluxoSistema(dataCiencia, prazoConcedido, emDobro) {
     const inicioPrazo = obterProximoDiaUtil(dataCiencia);
@@ -136,14 +161,14 @@
     const { prazoConcedido } = validacao;
 
     if (meio === 'djen_estimativa') {
-      const dataEnvio = parseDateFromInput(dataValor);
+      const dataEnvio = parseDataEnvioEstimativa(dataValor);
       if (!dataEnvio) {
         return { ok: false, erro: 'Informe a data de envio para estimativa.' };
       }
 
       const estimativa = estimarDisponibilizacaoPorEnvio(dataEnvio);
-      const publicacao = estimativa.dataDisponibilizacao;
-      const inicioPrazo = calcularInicioPrazo(estimativa.dataDisponibilizacao);
+      const publicacao = calcularPublicacaoDJEN(estimativa.dataDisponibilizacao);
+      const inicioPrazo = calcularInicioPrazo(publicacao);
       const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
 
       return {
