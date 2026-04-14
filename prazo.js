@@ -101,8 +101,8 @@
       cursor = obterProximoDiaUtil(cursor);
     }
 
-    return dias;
-  }
+    const validacao = validarEntradasComuns(prazoValor, meio);
+    if (!validacao.ok) return validacao;
 
   function calcularFluxoSistema(dataCiencia, prazoConcedido, emDobro) {
     const inicioPrazo = obterProximoDiaUtil(dataCiencia);
@@ -129,40 +129,7 @@
     return { ok: true, prazoConcedido };
   }
 
-  function normalizarEntradaCalculo(arg1, arg2, arg3, arg4) {
-    // Compatibilidade com assinatura nova: calcularPrazoDetalhado({ canal, prazoConcedido, dataBase }, hojeRef)
-    if (arg1 && typeof arg1 === 'object' && !Array.isArray(arg1) && !(arg1 instanceof Date)) {
-      const mapaCanalParaMeio = {
-        djen: 'djen_confirmado',
-        djen_envio: 'djen_estimativa',
-        sistema: 'sistema',
-        sistema_mp: 'sistema_autarquia',
-        djen_confirmado: 'djen_confirmado',
-        djen_estimativa: 'djen_estimativa',
-        sistema_autarquia: 'sistema_autarquia'
-      };
-
-      return {
-        dataValor: arg1.dataBase ?? arg1.dataReferencia ?? '',
-        prazoValor: arg1.prazoConcedido ?? '',
-        meio: mapaCanalParaMeio[arg1.canal] || mapaCanalParaMeio[arg1.meio] || '',
-        hojeRef: arg2 instanceof Date ? arg2 : new Date()
-      };
-    }
-
-    // Assinatura clássica: calcularPrazoDetalhado(data, prazo, meio, hojeRef)
-    return {
-      dataValor: arg1,
-      prazoValor: arg2,
-      meio: arg3,
-      hojeRef: arg4 instanceof Date ? arg4 : new Date()
-    };
-  }
-
-  function calcularPrazoDetalhado(arg1, arg2, arg3, arg4) {
-    const entrada = normalizarEntradaCalculo(arg1, arg2, arg3, arg4);
-    const { dataValor, prazoValor, meio, hojeRef } = entrada;
-
+  function calcularPrazoDetalhado(dataValor, prazoValor, meio, hojeRef = new Date()) {
     const validacao = validarEntradasComuns(prazoValor, meio);
     if (!validacao.ok) return validacao;
 
