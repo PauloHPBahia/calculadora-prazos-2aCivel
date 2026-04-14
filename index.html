@@ -209,12 +209,6 @@
                 ajuda: 'Use apenas a data em que a matéria foi enviada para publicação.',
                 descricao: 'Pré-cálculo para rotina da secretaria. Resultado com status Estimado.'
             },
-            djen_envio: {
-                tipoInput: 'date',
-                label: 'Data do envio',
-                ajuda: 'Use apenas a data em que a matéria foi enviada para publicação.',
-                descricao: 'Pré-cálculo para rotina da secretaria. Resultado com status Estimado.'
-            },
             sistema: {
                 tipoInput: 'date',
                 label: 'Data de ciência/intimação no sistema',
@@ -226,18 +220,12 @@
                 label: 'Data de ciência/intimação no sistema',
                 ajuda: 'Mantém contagem separada com prazo em dobro.',
                 descricao: 'Portal eletrônico para MP/DP/Fazenda/Autarquia.'
-            },
-            sistema_mp: {
-                tipoInput: 'date',
-                label: 'Data de ciência/intimação no sistema',
-                ajuda: 'Mantém contagem separada com prazo em dobro.',
-                descricao: 'Portal eletrônico para MP/DP/Fazenda/Autarquia.'
             }
         };
 
         function atualizarCamposDinamicos() {
             const meio = document.getElementById('meioIntimacao').value;
-            const cfg = configuracaoModalidade[meio] || configuracaoModalidade.djen_confirmado;
+            const cfg = configuracaoModalidade[meio];
             const inputData = document.getElementById('dataReferencia');
 
             inputData.type = cfg.tipoInput;
@@ -306,20 +294,8 @@
             const dataReferencia = document.getElementById('dataReferencia').value;
             const prazoConcedido = document.getElementById('prazoConcedido').value;
             const meio = document.getElementById('meioIntimacao').value;
-            const meioNormalizado = ({ djen_envio: 'djen_estimativa', sistema_mp: 'sistema_autarquia' })[meio] || meio;
 
-            if (!window.PrazoUtils || typeof window.PrazoUtils.calcularPrazoDetalhado !== 'function') {
-                exibirErro('Erro interno: motor de cálculo não foi carregado. Atualize a página e tente novamente.');
-                return;
-            }
-
-            let calculo;
-            try {
-                calculo = window.PrazoUtils.calcularPrazoDetalhado(dataReferencia, prazoConcedido, meioNormalizado);
-            } catch (err) {
-                exibirErro('Falha ao calcular prazo. Atualize a página (Ctrl+F5) e tente novamente.');
-                return;
-            }
+            const calculo = window.PrazoUtils.calcularPrazoDetalhado(dataReferencia, prazoConcedido, meio);
 
             if (!calculo.ok) {
                 exibirErro(calculo.erro || 'Não foi possível calcular o prazo. Verifique os campos.');

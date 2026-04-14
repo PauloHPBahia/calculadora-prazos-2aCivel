@@ -58,19 +58,6 @@ function run() {
   assert.equal(sistemaAutarquia.marcoTemporal.prazoEfetivo, '4 dia(s) útil(eis)');
   assert.equal(formatDateKey(sistemaAutarquia.dataFinal), '2025-04-28');
 
-  const assinaturaObjetoCompat = calcularPrazoDetalhado({
-    canal: 'djen_envio',
-    prazoConcedido: '2',
-    dataBase: '2025-04-16T18:30',
-    destinatario: 'parte_privada'
-  }, new Date('2025-04-24T00:00:00'));
-  assert.equal(assinaturaObjetoCompat.ok, true);
-  assert.equal(assinaturaObjetoCompat.status, 'Estimado');
-
-  const assinaturaPosicionalAlias = calcularPrazoDetalhado('2025-04-16', '2', 'djen_envio', new Date('2025-04-24T00:00:00'));
-  assert.equal(assinaturaPosicionalAlias.ok, true);
-  assert.equal(assinaturaPosicionalAlias.status, 'Estimado');
-
   const semData = calcularPrazoDetalhado('', '5', 'sistema');
   assert.equal(semData.ok, false);
 
