@@ -49,6 +49,54 @@ function run() {
   assert.equal(djenEstimadoComDataHora.ok, true);
   assert.equal(formatDateKey(djenEstimadoComDataHora.dataFinal), '2026-03-17', 'Data com horário deve usar apenas o dia informado para evitar deslocamento de fuso');
 
+  const djeIntimacaoConfirmada = calcularPrazoDetalhado('2025-04-16', '2', 'dje_intimacao_confirmada', new Date('2025-04-23T00:00:00'));
+  assert.equal(djeIntimacaoConfirmada.ok, true);
+  assert.equal(djeIntimacaoConfirmada.status, 'Confirmado');
+  assert.equal(djeIntimacaoConfirmada.marcoTemporal.ciencia, '16/04/2025');
+  assert.equal(formatDateKey(djeIntimacaoConfirmada.dataFinal), '2025-04-23', 'DJE intimação confirmada deve iniciar no próximo dia útil e contar dias úteis');
+
+  const djeIntimacaoEstimativa = calcularPrazoDetalhado('2025-04-16', '2', 'dje_intimacao_estimativa', new Date('2025-05-05T00:00:00'));
+  assert.equal(djeIntimacaoEstimativa.ok, true);
+  assert.equal(djeIntimacaoEstimativa.status, 'Estimado');
+  assert.equal(djeIntimacaoEstimativa.marcoTemporal.envio, '16/04/2025');
+  assert.equal(djeIntimacaoEstimativa.marcoTemporal.cienciaAutomatica, '26/04/2025');
+  assert.equal(formatDateKey(djeIntimacaoEstimativa.dataFinal), '2025-04-29', 'Estimativa DJE intimação deve usar 10 dias corridos + próximo útil');
+
+  const dpMpAutarquiaConfirmadaComum = calcularPrazoDetalhado(
+    '2025-04-16',
+    '2',
+    'dje_intimacao_dp_mp_autarquia_confirmada',
+    new Date('2025-04-24T00:00:00'),
+    { tipoPrazo: 'comum' }
+  );
+  assert.equal(dpMpAutarquiaConfirmadaComum.ok, true);
+  assert.equal(dpMpAutarquiaConfirmadaComum.marcoTemporal.prazoEfetivo, '2 dia(s) útil(eis)');
+  assert.equal(formatDateKey(dpMpAutarquiaConfirmadaComum.dataFinal), '2025-04-23');
+
+  const dpMpAutarquiaConfirmadaDobro = calcularPrazoDetalhado(
+    '2025-04-16',
+    '2',
+    'dje_intimacao_dp_mp_autarquia_confirmada',
+    new Date('2025-04-28T00:00:00'),
+    { tipoPrazo: 'dobro' }
+  );
+  assert.equal(dpMpAutarquiaConfirmadaDobro.ok, true);
+  assert.equal(dpMpAutarquiaConfirmadaDobro.marcoTemporal.prazoEfetivo, '4 dia(s) útil(eis)');
+  assert.equal(formatDateKey(dpMpAutarquiaConfirmadaDobro.dataFinal), '2025-04-25');
+
+  const dpMpAutarquiaEstimativaDobro = calcularPrazoDetalhado(
+    '2025-04-16',
+    '2',
+    'dje_intimacao_dp_mp_autarquia_estimativa',
+    new Date('2025-05-06T00:00:00'),
+    { tipoPrazo: 'dobro' }
+  );
+  assert.equal(dpMpAutarquiaEstimativaDobro.ok, true);
+  assert.equal(dpMpAutarquiaEstimativaDobro.status, 'Estimado');
+  assert.equal(dpMpAutarquiaEstimativaDobro.marcoTemporal.cienciaAutomatica, '26/04/2025');
+  assert.equal(dpMpAutarquiaEstimativaDobro.marcoTemporal.prazoEfetivo, '4 dia(s) útil(eis)');
+  assert.equal(formatDateKey(dpMpAutarquiaEstimativaDobro.dataFinal), '2025-05-05');
+
   const semData = calcularPrazoDetalhado('', '5', 'djen_confirmado');
   assert.equal(semData.ok, false);
 

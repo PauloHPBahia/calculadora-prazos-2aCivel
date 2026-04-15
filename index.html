@@ -156,6 +156,10 @@
                 <select id="meioIntimacao" onchange="atualizarCamposDinamicos()">
                     <option value="djen_confirmado">DJEN — disponibilização confirmada</option>
                     <option value="djen_estimativa">DJEN — envio para estimativa</option>
+                    <option value="dje_intimacao_confirmada">DJE - Intimação - Leitura confirmada</option>
+                    <option value="dje_intimacao_estimativa">DJE - Intimação - Estimativa para etiquetar</option>
+                    <option value="dje_intimacao_dp_mp_autarquia_confirmada">Intimação - DP, MP e AUTARQUIAS - Leitura confirmada</option>
+                    <option value="dje_intimacao_dp_mp_autarquia_estimativa">Intimação - DP, MP e AUTARQUIAS - Estimativa para etiquetar</option>
                 </select>
                 <p class="help" id="descricaoModalidade"></p>
             </div>
@@ -164,6 +168,15 @@
                 <label id="labelData" for="dataReferencia">Data de disponibilização</label>
                 <input type="date" id="dataReferencia" onkeydown="if(event.key === 'Enter') document.getElementById('prazoConcedido').focus();">
                 <p class="help" id="ajudaData"></p>
+            </div>
+
+            <div id="blocoTipoPrazo" style="display:none;">
+                <label for="tipoPrazo">Regime do prazo</label>
+                <select id="tipoPrazo">
+                    <option value="dobro">Prazo em dobro</option>
+                    <option value="comum">Prazo comum</option>
+                </select>
+                <p class="help">Escolha se o prazo concedido será contado em dobro ou em regime comum.</p>
             </div>
 
             <div>
@@ -186,6 +199,10 @@
         <ul>
             <li><strong>DJEN — disponibilização confirmada:</strong> informe a data da disponibilização. O sistema calcula publicação (próximo dia útil), início do prazo (próximo dia útil após publicação) e vencimento.</li>
             <li><strong>DJEN — envio para estimativa:</strong> informe apenas a data do envio. O cálculo ignora horário e projeta disponibilização, publicação e início do prazo sempre no próximo dia útil subsequente.</li>
+            <li><strong>DJE - Intimação - Leitura confirmada:</strong> informe a data da ciência confirmada. O prazo inicia no próximo dia útil.</li>
+            <li><strong>DJE - Intimação - Estimativa para etiquetar:</strong> informe a data do envio/intimação. O sistema projeta ciência automática em 10 dias corridos e início no próximo dia útil.</li>
+            <li><strong>Intimação - DP, MP e AUTARQUIAS - Leitura confirmada:</strong> informe a data da ciência e selecione prazo comum ou em dobro.</li>
+            <li><strong>Intimação - DP, MP e AUTARQUIAS - Estimativa para etiquetar:</strong> informe a data do envio; o sistema projeta ciência automática em 10 dias corridos + próximo útil, com prazo comum ou em dobro.</li>
         </ul>
         <p><strong>Base legal orientativa:</strong> Lei 11.419/2006, art. 4º, §§ 3º e 4º; CPC, arts. 219 e 224, §§ 2º e 3º; regra operacional do TJPA (Resolução nº 14/2021) para previsão de disponibilização do DJEN.</p>
     </div>
@@ -204,8 +221,37 @@
                 label: 'Data do envio',
                 ajuda: 'Use apenas a data em que a matéria foi enviada para publicação.',
                 descricao: 'Pré-cálculo para rotina da secretaria. Resultado com status Estimado.'
+            },
+            dje_intimacao_confirmada: {
+                tipoInput: 'date',
+                label: 'Data da ciência confirmada',
+                ajuda: 'Informe a data da leitura/consulta confirmada no Domicílio Judicial Eletrônico.',
+                descricao: 'DJE Intimação com ciência confirmada: início no próximo dia útil.'
+            },
+            dje_intimacao_estimativa: {
+                tipoInput: 'date',
+                label: 'Data do envio/intimação',
+                ajuda: 'Projeção para etiquetagem sem abertura/consulta registrada.',
+                descricao: 'DJE Intimação em estimativa: considera 10 dias corridos + próximo dia útil.'
+            },
+            dje_intimacao_dp_mp_autarquia_confirmada: {
+                tipoInput: 'date',
+                label: 'Data da ciência confirmada',
+                ajuda: 'Informe a data da leitura/consulta confirmada no Domicílio Judicial Eletrônico.',
+                descricao: 'Intimação de DP, MP e Autarquias com escolha entre prazo comum e em dobro.'
+            },
+            dje_intimacao_dp_mp_autarquia_estimativa: {
+                tipoInput: 'date',
+                label: 'Data do envio/intimação',
+                ajuda: 'Projeção para etiquetagem sem abertura/consulta registrada.',
+                descricao: 'Intimação de DP, MP e Autarquias em estimativa: 10 dias corridos + próximo dia útil.'
             }
         };
+
+        function exigeTipoPrazo(meio) {
+            return meio === 'dje_intimacao_dp_mp_autarquia_confirmada'
+                || meio === 'dje_intimacao_dp_mp_autarquia_estimativa';
+        }
 
         function atualizarCamposDinamicos() {
             const meio = document.getElementById('meioIntimacao').value;
@@ -217,6 +263,15 @@
             document.getElementById('labelData').innerText = cfg.label;
             document.getElementById('ajudaData').innerText = cfg.ajuda;
             document.getElementById('descricaoModalidade').innerText = cfg.descricao;
+
+            const blocoTipoPrazo = document.getElementById('blocoTipoPrazo');
+            if (exigeTipoPrazo(meio)) {
+                blocoTipoPrazo.style.display = 'block';
+            } else {
+                blocoTipoPrazo.style.display = 'none';
+                document.getElementById('tipoPrazo').value = 'dobro';
+            }
+
             ocultarMensagens();
         }
 
@@ -267,7 +322,8 @@
                 prazoConcedido: 'Prazo concedido',
                 prazoEfetivo: 'Prazo efetivo',
                 vencimento: 'Vencimento',
-                ciencia: 'Ciência/Intimação'
+                ciencia: 'Ciência/Intimação',
+                cienciaAutomatica: 'Ciência automática (10 dias corridos)'
             };
             return labels[chave] || chave;
         }
@@ -278,8 +334,17 @@
             const dataReferencia = document.getElementById('dataReferencia').value;
             const prazoConcedido = document.getElementById('prazoConcedido').value;
             const meio = document.getElementById('meioIntimacao').value;
+            const tipoPrazo = exigeTipoPrazo(meio)
+                ? document.getElementById('tipoPrazo').value
+                : undefined;
 
-            const calculo = window.PrazoUtils.calcularPrazoDetalhado(dataReferencia, prazoConcedido, meio);
+            const calculo = window.PrazoUtils.calcularPrazoDetalhado(
+                dataReferencia,
+                prazoConcedido,
+                meio,
+                new Date(),
+                { tipoPrazo }
+            );
 
             if (!calculo.ok) {
                 exibirErro(calculo.erro || 'Não foi possível calcular o prazo. Verifique os campos.');

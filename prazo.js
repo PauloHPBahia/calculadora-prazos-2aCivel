@@ -5,7 +5,11 @@
 
   const MODOS_VALIDOS = [
     'djen_confirmado',
-    'djen_estimativa'
+    'djen_estimativa',
+    'dje_intimacao_confirmada',
+    'dje_intimacao_estimativa',
+    'dje_intimacao_dp_mp_autarquia_confirmada',
+    'dje_intimacao_dp_mp_autarquia_estimativa'
   ];
 
   function formatDateKey(data) {
@@ -88,6 +92,107 @@
     };
   }
 
+  function adicionarDiasCorridos(dataBase, quantidade) {
+    return addDays(dataBase, quantidade);
+  }
+
+  function calcularDJEIntimacaoConfirmada(dataCienciaConfirmada, prazoConcedido, hojeRef) {
+    const inicioPrazo = obterProximoDiaUtil(dataCienciaConfirmada);
+    const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
+
+    return {
+      ok: true,
+      meio: 'dje_intimacao_confirmada',
+      status: 'Confirmado',
+      aviso: '',
+      marcoTemporal: {
+        ciencia: formatDatePtBr(dataCienciaConfirmada),
+        inicioPrazo: formatDatePtBr(inicioPrazo),
+        prazoConcedido: `${prazoConcedido} dia(s) útil(eis)`,
+        vencimento: formatDatePtBr(vencimento)
+      },
+      dataFinal: vencimento,
+      dataFinalFormatada: formatDatePtBr(vencimento),
+      diasDecorridos: calcularDiasDecorridosAteHoje(inicioPrazo, hojeRef)
+    };
+  }
+
+  function calcularDJEIntimacaoEstimativa(dataEnvio, prazoConcedido, hojeRef) {
+    const cienciaAutomatica = adicionarDiasCorridos(dataEnvio, 10);
+    const inicioPrazo = obterProximoDiaUtil(cienciaAutomatica);
+    const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
+
+    return {
+      ok: true,
+      meio: 'dje_intimacao_estimativa',
+      status: 'Estimado',
+      aviso: 'Este cálculo é uma estimativa para etiquetagem. Confirme a ciência/intimação oficial no Domicílio Judicial Eletrônico antes do uso definitivo.',
+      marcoTemporal: {
+        envio: formatDatePtBr(dataEnvio),
+        cienciaAutomatica: formatDatePtBr(cienciaAutomatica),
+        inicioPrazo: formatDatePtBr(inicioPrazo),
+        prazoConcedido: `${prazoConcedido} dia(s) útil(eis)`,
+        vencimento: formatDatePtBr(vencimento)
+      },
+      dataFinal: vencimento,
+      dataFinalFormatada: formatDatePtBr(vencimento),
+      diasDecorridos: calcularDiasDecorridosAteHoje(inicioPrazo, hojeRef)
+    };
+  }
+
+  function obterPrazoEfetivoIntimacaoDPMPAutarquia(prazoConcedido, tipoPrazo) {
+    if (tipoPrazo === 'dobro') return prazoConcedido * 2;
+    return prazoConcedido;
+  }
+
+  function calcularDJEIntimacaoDPMPAutarquiaConfirmada(dataCienciaConfirmada, prazoConcedido, tipoPrazo, hojeRef) {
+    const prazoEfetivo = obterPrazoEfetivoIntimacaoDPMPAutarquia(prazoConcedido, tipoPrazo);
+    const inicioPrazo = obterProximoDiaUtil(dataCienciaConfirmada);
+    const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoEfetivo);
+
+    return {
+      ok: true,
+      meio: 'dje_intimacao_dp_mp_autarquia_confirmada',
+      status: 'Confirmado',
+      aviso: '',
+      marcoTemporal: {
+        ciencia: formatDatePtBr(dataCienciaConfirmada),
+        inicioPrazo: formatDatePtBr(inicioPrazo),
+        prazoConcedido: `${prazoConcedido} dia(s) útil(eis)`,
+        prazoEfetivo: `${prazoEfetivo} dia(s) útil(eis)`,
+        vencimento: formatDatePtBr(vencimento)
+      },
+      dataFinal: vencimento,
+      dataFinalFormatada: formatDatePtBr(vencimento),
+      diasDecorridos: calcularDiasDecorridosAteHoje(inicioPrazo, hojeRef)
+    };
+  }
+
+  function calcularDJEIntimacaoDPMPAutarquiaEstimativa(dataEnvio, prazoConcedido, tipoPrazo, hojeRef) {
+    const prazoEfetivo = obterPrazoEfetivoIntimacaoDPMPAutarquia(prazoConcedido, tipoPrazo);
+    const cienciaAutomatica = adicionarDiasCorridos(dataEnvio, 10);
+    const inicioPrazo = obterProximoDiaUtil(cienciaAutomatica);
+    const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoEfetivo);
+
+    return {
+      ok: true,
+      meio: 'dje_intimacao_dp_mp_autarquia_estimativa',
+      status: 'Estimado',
+      aviso: 'Este cálculo é uma estimativa para etiquetagem. Confirme a ciência/intimação oficial no Domicílio Judicial Eletrônico antes do uso definitivo.',
+      marcoTemporal: {
+        envio: formatDatePtBr(dataEnvio),
+        cienciaAutomatica: formatDatePtBr(cienciaAutomatica),
+        inicioPrazo: formatDatePtBr(inicioPrazo),
+        prazoConcedido: `${prazoConcedido} dia(s) útil(eis)`,
+        prazoEfetivo: `${prazoEfetivo} dia(s) útil(eis)`,
+        vencimento: formatDatePtBr(vencimento)
+      },
+      dataFinal: vencimento,
+      dataFinalFormatada: formatDatePtBr(vencimento),
+      diasDecorridos: calcularDiasDecorridosAteHoje(inicioPrazo, hojeRef)
+    };
+  }
+
   function calcularDiasDecorridosAteHoje(dataInicio, hojeRef) {
     let dias = 0;
     let cursor = new Date(dataInicio);
@@ -116,7 +221,7 @@
     return { ok: true, prazoConcedido };
   }
 
-  function calcularPrazoDetalhado(dataValor, prazoValor, meio, hojeRef = new Date()) {
+  function calcularPrazoDetalhado(dataValor, prazoValor, meio, hojeRef = new Date(), opcoes = {}) {
     const validacao = validarEntradasComuns(prazoValor, meio);
     if (!validacao.ok) return validacao;
 
@@ -150,6 +255,42 @@
         dataFinalFormatada: formatDatePtBr(vencimento),
         diasDecorridos: calcularDiasDecorridosAteHoje(inicioPrazo, hojeRef)
       };
+    }
+
+    if (meio === 'dje_intimacao_confirmada') {
+      const dataCienciaConfirmada = parseDateFromInput(dataValor);
+      if (!dataCienciaConfirmada) {
+        return { ok: false, erro: 'Informe a data da ciência confirmada.' };
+      }
+
+      return calcularDJEIntimacaoConfirmada(dataCienciaConfirmada, prazoConcedido, hojeRef);
+    }
+
+    if (meio === 'dje_intimacao_estimativa') {
+      const dataEnvio = parseDateFromInput(dataValor);
+      if (!dataEnvio) {
+        return { ok: false, erro: 'Informe a data de envio/intimação para estimativa.' };
+      }
+
+      return calcularDJEIntimacaoEstimativa(dataEnvio, prazoConcedido, hojeRef);
+    }
+
+    if (meio === 'dje_intimacao_dp_mp_autarquia_confirmada') {
+      const dataCienciaConfirmada = parseDateFromInput(dataValor);
+      if (!dataCienciaConfirmada) {
+        return { ok: false, erro: 'Informe a data da ciência confirmada.' };
+      }
+
+      return calcularDJEIntimacaoDPMPAutarquiaConfirmada(dataCienciaConfirmada, prazoConcedido, opcoes.tipoPrazo, hojeRef);
+    }
+
+    if (meio === 'dje_intimacao_dp_mp_autarquia_estimativa') {
+      const dataEnvio = parseDateFromInput(dataValor);
+      if (!dataEnvio) {
+        return { ok: false, erro: 'Informe a data de envio/intimação para estimativa.' };
+      }
+
+      return calcularDJEIntimacaoDPMPAutarquiaEstimativa(dataEnvio, prazoConcedido, opcoes.tipoPrazo, hojeRef);
     }
 
     const dataBase = parseDateFromInput(dataValor);
@@ -194,6 +335,10 @@
     calcularInicioPrazo,
     contarPrazoDiasUteis,
     estimarDisponibilizacaoPorEnvio,
+    calcularDJEIntimacaoConfirmada,
+    calcularDJEIntimacaoEstimativa,
+    calcularDJEIntimacaoDPMPAutarquiaConfirmada,
+    calcularDJEIntimacaoDPMPAutarquiaEstimativa,
     calcularPrazoDetalhado,
     parseDateFromInput,
     formatDateKey
