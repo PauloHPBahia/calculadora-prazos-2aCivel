@@ -156,8 +156,6 @@
                 <select id="meioIntimacao" onchange="atualizarCamposDinamicos()">
                     <option value="djen_confirmado">DJEN — disponibilização confirmada</option>
                     <option value="djen_estimativa">DJEN — envio para estimativa</option>
-                    <option value="sistema">Sistema/portal eletrônico</option>
-                    <option value="sistema_autarquia">Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia</option>
                 </select>
                 <p class="help" id="descricaoModalidade"></p>
             </div>
@@ -188,8 +186,6 @@
         <ul>
             <li><strong>DJEN — disponibilização confirmada:</strong> informe a data da disponibilização. O sistema calcula publicação (próximo dia útil), início do prazo (próximo dia útil após publicação) e vencimento.</li>
             <li><strong>DJEN — envio para estimativa:</strong> informe apenas a data do envio. O cálculo ignora horário e projeta disponibilização, publicação e início do prazo sempre no próximo dia útil subsequente.</li>
-            <li><strong>Sistema/portal eletrônico:</strong> mantém lógica de ciência/intimação em portal, com contagem em dias úteis.</li>
-            <li><strong>Sistema/portal eletrônico — MP/DP/Fazenda/Autarquia:</strong> mantém lógica separada com prazo contado em dobro.</li>
         </ul>
         <p><strong>Base legal orientativa:</strong> Lei 11.419/2006, art. 4º, §§ 3º e 4º; CPC, arts. 219 e 224, §§ 2º e 3º; regra operacional do TJPA (Resolução nº 14/2021) para previsão de disponibilização do DJEN.</p>
     </div>
@@ -208,18 +204,6 @@
                 label: 'Data do envio',
                 ajuda: 'Use apenas a data em que a matéria foi enviada para publicação.',
                 descricao: 'Pré-cálculo para rotina da secretaria. Resultado com status Estimado.'
-            },
-            sistema: {
-                tipoInput: 'date',
-                label: 'Data de ciência/intimação no sistema',
-                ajuda: 'Modalidade distinta do DJEN. Mantém a lógica atual do portal.',
-                descricao: 'Intimação via portal eletrônico (sem regra de publicação do DJEN).'
-            },
-            sistema_autarquia: {
-                tipoInput: 'date',
-                label: 'Data de ciência/intimação no sistema',
-                ajuda: 'Mantém contagem separada com prazo em dobro.',
-                descricao: 'Portal eletrônico para MP/DP/Fazenda/Autarquia.'
             }
         };
 

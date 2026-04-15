@@ -5,9 +5,7 @@
 
   const MODOS_VALIDOS = [
     'djen_confirmado',
-    'djen_estimativa',
-    'sistema',
-    'sistema_autarquia'
+    'djen_estimativa'
   ];
 
   function formatDateKey(data) {
@@ -104,17 +102,6 @@
     return dias;
   }
 
-  function calcularFluxoSistema(dataCiencia, prazoConcedido, emDobro) {
-    const inicioPrazo = obterProximoDiaUtil(dataCiencia);
-    const prazoEfetivo = emDobro ? prazoConcedido * 2 : prazoConcedido;
-    const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoEfetivo);
-
-    return {
-      inicioPrazo,
-      prazoEfetivo,
-      vencimento
-    };
-  }
 
   function validarEntradasComuns(valorPrazo, meio) {
     const prazoConcedido = Number.parseInt(valorPrazo, 10);
@@ -142,8 +129,8 @@
       }
 
       const estimativa = estimarDisponibilizacaoPorEnvio(dataEnvio);
-      const publicacao = estimativa.dataDisponibilizacao;
-      const inicioPrazo = calcularInicioPrazo(estimativa.dataDisponibilizacao);
+      const publicacao = calcularPublicacaoDJEN(estimativa.dataDisponibilizacao);
+      const inicioPrazo = calcularInicioPrazo(publicacao);
       const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
 
       return {
@@ -196,24 +183,7 @@
       };
     }
 
-    const fluxoSistema = calcularFluxoSistema(dataBase, prazoConcedido, meio === 'sistema_autarquia');
-
-    return {
-      ok: true,
-      meio,
-      status: 'Confirmado',
-      aviso: '',
-      marcoTemporal: {
-        ciencia: formatDatePtBr(dataBase),
-        inicioPrazo: formatDatePtBr(fluxoSistema.inicioPrazo),
-        prazoConcedido: `${prazoConcedido} dia(s) útil(eis)`,
-        prazoEfetivo: `${fluxoSistema.prazoEfetivo} dia(s) útil(eis)`,
-        vencimento: formatDatePtBr(fluxoSistema.vencimento)
-      },
-      dataFinal: fluxoSistema.vencimento,
-      dataFinalFormatada: formatDatePtBr(fluxoSistema.vencimento),
-      diasDecorridos: calcularDiasDecorridosAteHoje(fluxoSistema.inicioPrazo, hojeRef)
-    };
+    return { ok: false, erro: 'Modalidade inválida.' };
   }
 
   const api = {

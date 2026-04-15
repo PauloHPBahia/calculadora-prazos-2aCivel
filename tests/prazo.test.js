@@ -39,29 +39,20 @@ function run() {
   assert.equal(djenEstimado.ok, true);
   assert.equal(djenEstimado.status, 'Estimado');
   assert.equal(djenEstimado.aviso.length > 0, true);
-  assert.equal(djenEstimado.marcoTemporal.publicacao, '22/04/2025');
+  assert.equal(djenEstimado.marcoTemporal.publicacao, '23/04/2025');
 
   const djenEstimadoMarco2026 = calcularPrazoDetalhado('2026-02-22', '15', 'djen_estimativa', new Date('2026-03-24T00:00:00'));
   assert.equal(djenEstimadoMarco2026.ok, true);
-  assert.equal(formatDateKey(djenEstimadoMarco2026.dataFinal), '2026-03-16', 'Estimativa DJEN deve considerar início após disponibilização estimada');
+  assert.equal(formatDateKey(djenEstimadoMarco2026.dataFinal), '2026-03-17', 'Estimativa DJEN deve considerar publicação e início em dias úteis subsequentes');
 
   const djenEstimadoComDataHora = calcularPrazoDetalhado('2026-02-22T21:00:00.000Z', '15', 'djen_estimativa', new Date('2026-03-24T00:00:00'));
   assert.equal(djenEstimadoComDataHora.ok, true);
-  assert.equal(formatDateKey(djenEstimadoComDataHora.dataFinal), '2026-03-16', 'Data com horário deve usar apenas o dia informado para evitar deslocamento de fuso');
+  assert.equal(formatDateKey(djenEstimadoComDataHora.dataFinal), '2026-03-17', 'Data com horário deve usar apenas o dia informado para evitar deslocamento de fuso');
 
-  const sistema = calcularPrazoDetalhado('2025-04-22', '1', 'sistema', new Date('2025-04-23T00:00:00'));
-  assert.equal(sistema.ok, true);
-  assert.equal(formatDateKey(sistema.dataFinal), '2025-04-23');
-
-  const sistemaAutarquia = calcularPrazoDetalhado('2025-04-22', '2', 'sistema_autarquia', new Date('2025-04-25T00:00:00'));
-  assert.equal(sistemaAutarquia.ok, true);
-  assert.equal(sistemaAutarquia.marcoTemporal.prazoEfetivo, '4 dia(s) útil(eis)');
-  assert.equal(formatDateKey(sistemaAutarquia.dataFinal), '2025-04-28');
-
-  const semData = calcularPrazoDetalhado('', '5', 'sistema');
+  const semData = calcularPrazoDetalhado('', '5', 'djen_confirmado');
   assert.equal(semData.ok, false);
 
-  const prazoInvalido = calcularPrazoDetalhado('2025-04-17', '0', 'sistema');
+  const prazoInvalido = calcularPrazoDetalhado('2025-04-17', '0', 'djen_confirmado');
   assert.equal(prazoInvalido.ok, false);
 
   const meioInvalido = calcularPrazoDetalhado('2025-04-17', '5', 'email');
