@@ -158,8 +158,6 @@
                     <option value="djen_estimativa">DJEN — envio para estimativa</option>
                     <option value="dje_intimacao_confirmada">DJE - Intimação - Leitura confirmada</option>
                     <option value="dje_intimacao_estimativa">DJE - Intimação - Estimativa para etiquetar</option>
-                    <option value="dje_intimacao_dp_mp_autarquia_confirmada">Intimação - DP, MP e AUTARQUIAS - Leitura confirmada</option>
-                    <option value="dje_intimacao_dp_mp_autarquia_estimativa">Intimação - DP, MP e AUTARQUIAS - Estimativa para etiquetar</option>
                 </select>
                 <p class="help" id="descricaoModalidade"></p>
             </div>
@@ -201,8 +199,6 @@
             <li><strong>DJEN — envio para estimativa:</strong> informe apenas a data do envio. O cálculo ignora horário e projeta disponibilização, publicação e início do prazo sempre no próximo dia útil subsequente.</li>
             <li><strong>DJE - Intimação - Leitura confirmada:</strong> informe a data da ciência confirmada. O prazo inicia no próximo dia útil.</li>
             <li><strong>DJE - Intimação - Estimativa para etiquetar:</strong> informe a data do envio/intimação. O sistema projeta ciência automática em 10 dias corridos e início no próximo dia útil.</li>
-            <li><strong>Intimação - DP, MP e AUTARQUIAS - Leitura confirmada:</strong> informe a data da ciência e selecione prazo comum ou em dobro.</li>
-            <li><strong>Intimação - DP, MP e AUTARQUIAS - Estimativa para etiquetar:</strong> informe a data do envio; o sistema projeta ciência automática em 10 dias corridos + próximo útil, com prazo comum ou em dobro.</li>
         </ul>
         <p><strong>Base legal orientativa:</strong> Lei 11.419/2006, art. 4º, §§ 3º e 4º; CPC, arts. 219 e 224, §§ 2º e 3º; regra operacional do TJPA (Resolução nº 14/2021) para previsão de disponibilização do DJEN.</p>
     </div>
@@ -233,18 +229,6 @@
                 label: 'Data do envio/intimação',
                 ajuda: 'Projeção para etiquetagem sem abertura/consulta registrada.',
                 descricao: 'DJE Intimação em estimativa: considera 10 dias corridos + próximo dia útil.'
-            },
-            dje_intimacao_dp_mp_autarquia_confirmada: {
-                tipoInput: 'date',
-                label: 'Data da ciência confirmada',
-                ajuda: 'Informe a data da leitura/consulta confirmada no Domicílio Judicial Eletrônico.',
-                descricao: 'Intimação de DP, MP e Autarquias com escolha entre prazo comum e em dobro.'
-            },
-            dje_intimacao_dp_mp_autarquia_estimativa: {
-                tipoInput: 'date',
-                label: 'Data do envio/intimação',
-                ajuda: 'Projeção para etiquetagem sem abertura/consulta registrada.',
-                descricao: 'Intimação de DP, MP e Autarquias em estimativa: 10 dias corridos + próximo dia útil.'
             }
         };
 
