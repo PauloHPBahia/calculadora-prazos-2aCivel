@@ -168,6 +168,15 @@
                 <p class="help" id="ajudaData"></p>
             </div>
 
+            <div id="blocoTipoPrazo" style="display:none;">
+                <label for="tipoPrazo">Regime do prazo</label>
+                <select id="tipoPrazo">
+                    <option value="dobro">Prazo em dobro</option>
+                    <option value="comum">Prazo comum</option>
+                </select>
+                <p class="help">Escolha se o prazo concedido será contado em dobro ou em regime comum.</p>
+            </div>
+
             <div>
                 <label for="prazoConcedido">Prazo concedido (dias úteis)</label>
                 <input type="number" id="prazoConcedido" min="1" onkeydown="if(event.key === 'Enter') calcularPrazo();">
@@ -223,6 +232,11 @@
             }
         };
 
+        function exigeTipoPrazo(meio) {
+            return meio === 'dje_intimacao_dp_mp_autarquia_confirmada'
+                || meio === 'dje_intimacao_dp_mp_autarquia_estimativa';
+        }
+
         function atualizarCamposDinamicos() {
             const meio = document.getElementById('meioIntimacao').value;
             const cfg = configuracaoModalidade[meio];
@@ -233,6 +247,15 @@
             document.getElementById('labelData').innerText = cfg.label;
             document.getElementById('ajudaData').innerText = cfg.ajuda;
             document.getElementById('descricaoModalidade').innerText = cfg.descricao;
+
+            const blocoTipoPrazo = document.getElementById('blocoTipoPrazo');
+            if (exigeTipoPrazo(meio)) {
+                blocoTipoPrazo.style.display = 'block';
+            } else {
+                blocoTipoPrazo.style.display = 'none';
+                document.getElementById('tipoPrazo').value = 'dobro';
+            }
+
             ocultarMensagens();
         }
 
@@ -295,8 +318,17 @@
             const dataReferencia = document.getElementById('dataReferencia').value;
             const prazoConcedido = document.getElementById('prazoConcedido').value;
             const meio = document.getElementById('meioIntimacao').value;
+            const tipoPrazo = exigeTipoPrazo(meio)
+                ? document.getElementById('tipoPrazo').value
+                : undefined;
 
-            const calculo = window.PrazoUtils.calcularPrazoDetalhado(dataReferencia, prazoConcedido, meio);
+            const calculo = window.PrazoUtils.calcularPrazoDetalhado(
+                dataReferencia,
+                prazoConcedido,
+                meio,
+                new Date(),
+                { tipoPrazo }
+            );
 
             if (!calculo.ok) {
                 exibirErro(calculo.erro || 'Não foi possível calcular o prazo. Verifique os campos.');

@@ -166,7 +166,7 @@
     return { ok: true, prazoConcedido };
   }
 
-  function calcularPrazoDetalhado(dataValor, prazoValor, meio, hojeRef = new Date()) {
+  function calcularPrazoDetalhado(dataValor, prazoValor, meio, hojeRef = new Date(), opcoes = {}) {
     const validacao = validarEntradasComuns(prazoValor, meio);
     if (!validacao.ok) return validacao;
 
