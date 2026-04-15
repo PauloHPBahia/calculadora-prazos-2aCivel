@@ -49,6 +49,19 @@ function run() {
   assert.equal(djenEstimadoComDataHora.ok, true);
   assert.equal(formatDateKey(djenEstimadoComDataHora.dataFinal), '2026-03-17', 'Data com horário deve usar apenas o dia informado para evitar deslocamento de fuso');
 
+  const djeIntimacaoConfirmada = calcularPrazoDetalhado('2025-04-16', '2', 'dje_intimacao_confirmada', new Date('2025-04-23T00:00:00'));
+  assert.equal(djeIntimacaoConfirmada.ok, true);
+  assert.equal(djeIntimacaoConfirmada.status, 'Confirmado');
+  assert.equal(djeIntimacaoConfirmada.marcoTemporal.ciencia, '16/04/2025');
+  assert.equal(formatDateKey(djeIntimacaoConfirmada.dataFinal), '2025-04-23', 'DJE intimação confirmada deve iniciar no próximo dia útil e contar dias úteis');
+
+  const djeIntimacaoEstimativa = calcularPrazoDetalhado('2025-04-16', '2', 'dje_intimacao_estimativa', new Date('2025-05-05T00:00:00'));
+  assert.equal(djeIntimacaoEstimativa.ok, true);
+  assert.equal(djeIntimacaoEstimativa.status, 'Estimado');
+  assert.equal(djeIntimacaoEstimativa.marcoTemporal.envio, '16/04/2025');
+  assert.equal(djeIntimacaoEstimativa.marcoTemporal.cienciaAutomatica, '26/04/2025');
+  assert.equal(formatDateKey(djeIntimacaoEstimativa.dataFinal), '2025-04-29', 'Estimativa DJE intimação deve usar 10 dias corridos + próximo útil');
+
   const semData = calcularPrazoDetalhado('', '5', 'djen_confirmado');
   assert.equal(semData.ok, false);
 
