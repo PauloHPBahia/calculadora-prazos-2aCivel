@@ -324,11 +324,15 @@
             const entradas = Object.entries(calculo.marcoTemporal || {});
 
             resultado.classList.add(statusClasse);
+            const labelDiasDecorridos = calculo.meio === 'calculo_simples' && calculo.marcoTemporal?.tipoContagem === 'Dias corridos'
+                ? 'Dias corridos transcorridos até hoje'
+                : 'Dias úteis decorridos até hoje';
+
             resultado.innerHTML = `
                 <span class="status">Status: ${calculo.status}</span>
                 <dl>
                     ${entradas.map(([chave, valor]) => `<dt>${formatarLabel(chave)}</dt><dd>${valor}</dd>`).join('')}
-                    <dt>Dias úteis decorridos até hoje</dt>
+                    <dt>${labelDiasDecorridos}</dt>
                     <dd>${calculo.diasDecorridos}</dd>
                 </dl>
             `;
