@@ -4,6 +4,7 @@
   ];
 
   const MODOS_VALIDOS = [
+    'calculo_simples',
     'djen_confirmado',
     'djen_estimativa',
     'dje_intimacao_confirmada',
@@ -291,6 +292,32 @@
       }
 
       return calcularDJEIntimacaoDPMPAutarquiaEstimativa(dataEnvio, prazoConcedido, opcoes.tipoPrazo, hojeRef);
+    }
+
+    if (meio === 'calculo_simples') {
+      const dataBaseSimples = parseDateFromInput(dataValor);
+      if (!dataBaseSimples) {
+        return { ok: false, erro: 'Informe a data base para contagem simples.' };
+      }
+
+      const inicioPrazo = obterProximoDiaUtil(dataBaseSimples);
+      const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
+
+      return {
+        ok: true,
+        meio,
+        status: 'Confirmado',
+        aviso: '',
+        marcoTemporal: {
+          dataBase: formatDatePtBr(dataBaseSimples),
+          inicioPrazo: formatDatePtBr(inicioPrazo),
+          prazoConcedido: `${prazoConcedido} dia(s) útil(eis)`,
+          vencimento: formatDatePtBr(vencimento)
+        },
+        dataFinal: vencimento,
+        dataFinalFormatada: formatDatePtBr(vencimento),
+        diasDecorridos: calcularDiasDecorridosAteHoje(inicioPrazo, hojeRef)
+      };
     }
 
     const dataBase = parseDateFromInput(dataValor);

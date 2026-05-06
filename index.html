@@ -154,6 +154,7 @@
             <div>
                 <label for="meioIntimacao">Modalidade</label>
                 <select id="meioIntimacao" onchange="atualizarCamposDinamicos()">
+                    <option value="calculo_simples">Cálculo simples — contagem a partir do próximo dia útil</option>
                     <option value="djen_confirmado">DJEN — disponibilização confirmada</option>
                     <option value="djen_estimativa">DJEN — envio para estimativa</option>
                     <option value="dje_intimacao_confirmada">DJE - Intimação - Leitura confirmada</option>
@@ -198,6 +199,7 @@
         <h2>Manual de uso (resumo)</h2>
         <ul>
             <li><strong>DJEN — disponibilização confirmada:</strong> informe a data da disponibilização. O sistema calcula publicação (próximo dia útil), início do prazo (próximo dia útil após publicação) e vencimento.</li>
+            <li><strong>Cálculo simples — contagem a partir do próximo dia útil:</strong> informe a data base (ex.: hoje). O sistema inicia no próximo dia útil (ex.: amanhã, se útil) e calcula o vencimento em dias úteis.</li>
             <li><strong>DJEN — envio para estimativa:</strong> informe apenas a data do envio. O cálculo ignora horário e projeta disponibilização, publicação e início do prazo sempre no próximo dia útil subsequente.</li>
             <li><strong>DJE - Intimação - Leitura confirmada:</strong> informe a data da ciência confirmada. O prazo inicia no próximo dia útil.</li>
             <li><strong>DJE - Intimação - Estimativa para etiquetar:</strong> informe a data do envio/intimação. O sistema projeta ciência automática em 10 dias corridos e início no próximo dia útil.</li>
@@ -210,6 +212,12 @@
     <script src="prazo.js"></script>
     <script>
         const configuracaoModalidade = {
+            calculo_simples: {
+                tipoInput: 'date',
+                label: 'Data base para contagem',
+                ajuda: 'Use a data de referência (ex.: hoje). O 1º dia contado será o próximo dia útil.',
+                descricao: 'Contagem simples em dias úteis, com início no próximo dia útil após a data base.'
+            },
             djen_confirmado: {
                 tipoInput: 'date',
                 label: 'Data de disponibilização',
@@ -324,6 +332,8 @@
                 vencimento: 'Vencimento',
                 ciencia: 'Ciência/Intimação',
                 cienciaAutomatica: 'Ciência automática (10 dias corridos)'
+                ,
+                dataBase: 'Data base'
             };
             return labels[chave] || chave;
         }

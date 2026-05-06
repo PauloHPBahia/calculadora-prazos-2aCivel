@@ -97,6 +97,13 @@ function run() {
   assert.equal(dpMpAutarquiaEstimativaDobro.marcoTemporal.prazoEfetivo, '4 dia(s) útil(eis)');
   assert.equal(formatDateKey(dpMpAutarquiaEstimativaDobro.dataFinal), '2025-05-05');
 
+  const calculoSimples = calcularPrazoDetalhado('2025-04-16', '3', 'calculo_simples', new Date('2025-04-23T00:00:00'));
+  assert.equal(calculoSimples.ok, true);
+  assert.equal(calculoSimples.status, 'Confirmado');
+  assert.equal(calculoSimples.marcoTemporal.dataBase, '16/04/2025');
+  assert.equal(calculoSimples.marcoTemporal.inicioPrazo, '22/04/2025');
+  assert.equal(formatDateKey(calculoSimples.dataFinal), '2025-04-24', 'Cálculo simples deve começar no próximo dia útil da data base e contar dias úteis');
+
   const semData = calcularPrazoDetalhado('', '5', 'djen_confirmado');
   assert.equal(semData.ok, false);
 
