@@ -4,6 +4,7 @@
   ];
 
   const MODOS_VALIDOS = [
+    'calculo_simples',
     'djen_confirmado',
     'djen_estimativa',
     'dje_intimacao_confirmada',
@@ -94,6 +95,10 @@
 
   function adicionarDiasCorridos(dataBase, quantidade) {
     return addDays(dataBase, quantidade);
+  }
+
+  function contarPrazoDiasCorridos(dataInicio, quantidadeDias) {
+    return addDays(dataInicio, quantidadeDias - 1);
   }
 
   function calcularDJEIntimacaoConfirmada(dataCienciaConfirmada, prazoConcedido, hojeRef) {
@@ -291,6 +296,38 @@
       }
 
       return calcularDJEIntimacaoDPMPAutarquiaEstimativa(dataEnvio, prazoConcedido, opcoes.tipoPrazo, hojeRef);
+    }
+
+    if (meio === 'calculo_simples') {
+      const dataBaseSimples = parseDateFromInput(dataValor);
+      if (!dataBaseSimples) {
+        return { ok: false, erro: 'Informe a data base para contagem simples.' };
+      }
+
+      const inicioPrazo = obterProximoDiaUtil(dataBaseSimples);
+      const tipoContagemSimples = opcoes.tipoContagemSimples === 'corridos' ? 'corridos' : 'uteis';
+      const vencimento = tipoContagemSimples === 'corridos'
+        ? contarPrazoDiasCorridos(inicioPrazo, prazoConcedido)
+        : contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
+
+      return {
+        ok: true,
+        meio,
+        status: 'Confirmado',
+        aviso: '',
+        marcoTemporal: {
+          dataBase: formatDatePtBr(dataBaseSimples),
+          inicioPrazo: formatDatePtBr(inicioPrazo),
+          tipoContagem: tipoContagemSimples === 'corridos' ? 'Dias corridos' : 'Dias úteis',
+          prazoConcedido: tipoContagemSimples === 'corridos'
+            ? `${prazoConcedido} dia(s) corrido(s)`
+            : `${prazoConcedido} dia(s) útil(eis)`,
+          vencimento: formatDatePtBr(vencimento)
+        },
+        dataFinal: vencimento,
+        dataFinalFormatada: formatDatePtBr(vencimento),
+        diasDecorridos: calcularDiasDecorridosAteHoje(inicioPrazo, hojeRef)
+      };
     }
 
     const dataBase = parseDateFromInput(dataValor);
