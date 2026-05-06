@@ -97,6 +97,10 @@
     return addDays(dataBase, quantidade);
   }
 
+  function contarPrazoDiasCorridos(dataInicio, quantidadeDias) {
+    return addDays(dataInicio, quantidadeDias - 1);
+  }
+
   function calcularDJEIntimacaoConfirmada(dataCienciaConfirmada, prazoConcedido, hojeRef) {
     const inicioPrazo = obterProximoDiaUtil(dataCienciaConfirmada);
     const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
@@ -301,7 +305,10 @@
       }
 
       const inicioPrazo = obterProximoDiaUtil(dataBaseSimples);
-      const vencimento = contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
+      const tipoContagemSimples = opcoes.tipoContagemSimples === 'corridos' ? 'corridos' : 'uteis';
+      const vencimento = tipoContagemSimples === 'corridos'
+        ? contarPrazoDiasCorridos(inicioPrazo, prazoConcedido)
+        : contarPrazoDiasUteis(inicioPrazo, prazoConcedido);
 
       return {
         ok: true,
@@ -311,7 +318,10 @@
         marcoTemporal: {
           dataBase: formatDatePtBr(dataBaseSimples),
           inicioPrazo: formatDatePtBr(inicioPrazo),
-          prazoConcedido: `${prazoConcedido} dia(s) útil(eis)`,
+          tipoContagem: tipoContagemSimples === 'corridos' ? 'Dias corridos' : 'Dias úteis',
+          prazoConcedido: tipoContagemSimples === 'corridos'
+            ? `${prazoConcedido} dia(s) corrido(s)`
+            : `${prazoConcedido} dia(s) útil(eis)`,
           vencimento: formatDatePtBr(vencimento)
         },
         dataFinal: vencimento,
